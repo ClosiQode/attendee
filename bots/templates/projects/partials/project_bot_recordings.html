@@ -43,6 +43,9 @@
                                 <button class="btn btn-outline-danger btn-sm" onclick="deleteRecording()">
                                     <i class="bi bi-trash"></i> Supprimer la video
                                 </button>
+                                <button class="btn btn-outline-danger btn-sm ms-1" onclick="deleteTranscription()">
+                                    <i class="bi bi-trash"></i> Supprimer la transcription
+                                </button>
                                 <div class="share-section mt-3" data-delete-url="/projects/{{ bot.project.object_id }}/bots/{{ bot.object_id }}/delete-recording">
                                     <button class="btn btn-outline-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#sharePanel" aria-expanded="false">
                                         <i class="bi bi-share"></i> Partager
@@ -416,10 +419,24 @@
     }
 
     function deleteRecording() {
-        if (!confirm('Supprimer definitivement cette video ? Cette action est irreversible.')) return;
-        const deleteUrl = document.querySelector('.share-section').dataset.deleteUrl;
+        if (!confirm('Supprimer definitivement cette video ? La transcription sera conservee.')) return;
+        fetch('/projects/{{ bot.project.object_id }}/bots/{{ bot.object_id }}/delete-recording', {
+            method: 'POST',
+            headers: {'X-CSRFToken': getCSRF()}
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.status === 'ok') {
+                location.reload();
+            } else {
+                alert(data.error || 'Erreur lors de la suppression');
+            }
+        });
+    }
 
-        fetch(deleteUrl, {
+    function deleteTranscription() {
+        if (!confirm('Supprimer definitivement la transcription ? Cette action est irreversible.')) return;
+        fetch('/projects/{{ bot.project.object_id }}/bots/{{ bot.object_id }}/delete-transcription', {
             method: 'POST',
             headers: {'X-CSRFToken': getCSRF()}
         })

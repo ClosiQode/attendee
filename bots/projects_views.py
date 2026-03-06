@@ -998,6 +998,57 @@ class ProjectBotDeleteRecordingView(LoginRequiredMixin, ProjectUrlContextMixin, 
         return JsonResponse({"status": "ok"})
 
 
+class ProjectBotDeleteTranscriptionView(LoginRequiredMixin, ProjectUrlContextMixin, View):
+    def post(self, request, object_id, bot_object_id):
+        project = get_project_for_user(user=request.user, project_object_id=object_id)
+        bot = get_object_or_404(Bot, object_id=bot_object_id, project=project)
+        recording = Recording.objects.filter(bot=bot, is_default_recording=True).first()
+        if not recording:
+            recording = bot.recordings.first()
+        if not recording:
+            return JsonResponse({"error": "Aucun enregistrement trouve"}, status=404)
+
+        # Delete utterances (transcription data)
+        recording.utterances.all().delete()
+        # Delete audio chunks
+        recording.audio_chunks.all().delete()
+
+        return JsonResponse({"status": "ok"})
+
+
+class ProjectBotDeleteView(LoginRequiredMixin, ProjectUrlContextMixin, View):
+    def post(self, request, object_id, bot_object_id):
+        project = get_project_for_user(user=request.user, project_object_id=object_id)
+        bot = get_object_or_404(Bot, object_id=bot_object_id, project=project)
+
+        try:
+            # Delete all recordings, files, transcriptions, share links, participants
+            for recording in bot.recordings.all():
+                # Delete share links
+                from bots.models import SharedRecordingLink
+                SharedRecordingLink.objects.filter(recording=recording).delete()
+                # Delete audio chunks and utterances
+                recording.audio_chunks.all().delete()
+                recording.utterances.all().delete()
+                # Delete the video file from disk
+                if recording.file and recording.file.name:
+                    try:
+                        recording.file.delete(save=False)
+                    except Exception as e:
+                        logger.error(f"Error deleting recording file: {e}")
+                recording.delete()
+
+            # Delete participants
+            bot.participants.all().delete()
+            # Delete the bot itself
+            bot.delete()
+
+            return JsonResponse({"status": "ok"})
+        except Exception as e:
+            logger.error(f"Error deleting bot: {e}")
+            return JsonResponse({"error": "Erreur lors de la suppression du bot"}, status=500)
+
+
 class ProjectWebhooksView(LoginRequiredMixin, ProjectUrlContextMixin, View):
     def get(self, request, object_id):
         project = get_project_for_user(user=request.user, project_object_id=object_id)

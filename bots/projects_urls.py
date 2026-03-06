@@ -62,6 +62,16 @@ urlpatterns = [
         name="project-bot-delete-recording",
     ),
     path(
+        "<str:object_id>/bots/<str:bot_object_id>/delete-transcription",
+        projects_views.ProjectBotDeleteTranscriptionView.as_view(),
+        name="project-bot-delete-transcription",
+    ),
+    path(
+        "<str:object_id>/bots/<str:bot_object_id>/delete",
+        projects_views.ProjectBotDeleteView.as_view(),
+        name="project-bot-delete",
+    ),
+    path(
         "<str:object_id>/credentials",
         projects_views.ProjectCredentialsView.as_view(),
         name="project-credentials",

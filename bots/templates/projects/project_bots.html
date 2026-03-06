@@ -59,11 +59,12 @@
 </style>
 
 <div class="container mt-4">
+    {% csrf_token %}
     <div class="d-flex justify-content-between align-items-center mb-4">
         {% if session_type == SessionTypes.BOT %}
             <h2>Bots</h2>
             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createBotModal">
-                <i class="bi bi-plus-circle me-1"></i> Create Bot
+                <i class="bi bi-plus-circle me-1"></i> Creer un bot
             </button>
         {% endif %}
         {% if session_type == SessionTypes.APP_SESSION %}
@@ -74,11 +75,11 @@
     <!-- Filters Collapsible Panel -->
     {% if filter_params.start_date or filter_params.end_date or filter_params.join_at_start or filter_params.join_at_end or filter_params.ended_at_start or filter_params.ended_at_end or filter_params.states or filter_params.search or filter_params.joined_meeting or filter_params.unexpected_error or bots %}
     <div class="filter-panel mb-3">
-        <div class="filter-header p-2 rounded d-flex align-items-center" 
-             style="background-color: #f8f9fa; cursor: pointer;" 
+        <div class="filter-header p-2 rounded d-flex align-items-center"
+             style="background-color: #f8f9fa; cursor: pointer;"
              onclick="toggleFilterPanel(event)">
             <i class="bi bi-funnel me-2"></i>
-            <span>Filters</span>
+            <span>Filtres</span>
             <span style="margin-left: 5px;" class="filter-caret-container ms-auto">
                 <svg width="21" height="21" viewBox="0 0 14 14" fill="none" class="filter-caret" 
                      style="transform: {% if filter_params.start_date or filter_params.end_date or filter_params.join_at_start or filter_params.join_at_end or filter_params.ended_at_start or filter_params.ended_at_end or filter_params.states or filter_params.search or filter_params.joined_meeting or filter_params.unexpected_error %}rotate(180deg){% else %}rotate(0deg){% endif %};">
@@ -92,15 +93,15 @@
                     <!-- Search filter -->
                     <div class="col-md-10 filter-item">
                         <div style="display: inline-flex; white-space: nowrap; align-items: center;">
-                            <label for="search" class="form-label me-2 mb-0" style="flex-shrink: 0;">Search</label>
-                            <input type="text" class="form-control form-control-sm" id="search" name="search" value="{{ filter_params.search }}" placeholder="ID, Meeting URL, Name">
+                            <label for="search" class="form-label me-2 mb-0" style="flex-shrink: 0;">Recherche</label>
+                            <input type="text" class="form-control form-control-sm" id="search" name="search" value="{{ filter_params.search }}" placeholder="ID, URL de reunion, Nom">
                         </div>
                     </div>
                     
                     <!-- Compact date filters in a single row -->
                     <div class="col-md-12 d-flex flex-wrap filter-item">
                         <div class="me-2" style="display: inline-flex; white-space: nowrap; align-items: center;">
-                            <label for="start_date" class="form-label me-2 mb-0" style="flex-shrink: 0;">Created</label>
+                            <label for="start_date" class="form-label me-2 mb-0" style="flex-shrink: 0;">Cree le</label>
                             <input type="date" class="form-control form-control-sm" id="start_date" name="start_date" value="{{ filter_params.start_date }}">
                         </div>
                         
@@ -112,7 +113,7 @@
                         <div class="me-4" style="border-left: 1px solid #dee2e6; height: 24px; align-self: center;"></div>
                         
                         <div class="me-2" style="display: inline-flex; white-space: nowrap; align-items: center;">
-                            <label for="ended_at_start" class="form-label me-2 mb-0" style="flex-shrink: 0;">Ended</label>
+                            <label for="ended_at_start" class="form-label me-2 mb-0" style="flex-shrink: 0;">Termine le</label>
                             <input type="date" class="form-control form-control-sm" id="ended_at_start" name="ended_at_start" value="{{ filter_params.ended_at_start }}">
                         </div>
                         
@@ -124,7 +125,7 @@
                         <div class="me-4" style="border-left: 1px solid #dee2e6; height: 24px; align-self: center;"></div>
                         
                         <div class="me-2" style="display: inline-flex; white-space: nowrap; align-items: center;">
-                            <label for="join_at_start" class="form-label me-2 mb-0" style="flex-shrink: 0;">Join At</label>
+                            <label for="join_at_start" class="form-label me-2 mb-0" style="flex-shrink: 0;">Rejoint le</label>
                             <input type="date" class="form-control form-control-sm" id="join_at_start" name="join_at_start" value="{{ filter_params.join_at_start }}">
                         </div>
                         
@@ -137,26 +138,26 @@
                     <div class="col-md-10 filter-item">
                         <div style="display: inline-flex; white-space: nowrap; align-items: center; gap: 15px;">
                             <div style="display: inline-flex; align-items: center;">
-                                <span class="me-2" style="flex-shrink: 0;">Joined Meeting</span>
+                                <span class="me-2" style="flex-shrink: 0;">A rejoint</span>
                                 <div class="btn-group btn-group-sm" role="group">
                                     <input type="radio" class="btn-check" name="joined_meeting" id="joined_meeting_any" value="" {% if not filter_params.joined_meeting %}checked{% endif %}>
-                                    <label class="btn btn-outline-secondary" for="joined_meeting_any">Any</label>
+                                    <label class="btn btn-outline-secondary" for="joined_meeting_any">Tous</label>
                                     <input type="radio" class="btn-check" name="joined_meeting" id="joined_meeting_yes" value="yes" {% if filter_params.joined_meeting == "yes" %}checked{% endif %}>
-                                    <label class="btn btn-outline-secondary" for="joined_meeting_yes">Yes</label>
+                                    <label class="btn btn-outline-secondary" for="joined_meeting_yes">Oui</label>
                                     <input type="radio" class="btn-check" name="joined_meeting" id="joined_meeting_no" value="no" {% if filter_params.joined_meeting == "no" %}checked{% endif %}>
-                                    <label class="btn btn-outline-secondary" for="joined_meeting_no">No</label>
+                                    <label class="btn btn-outline-secondary" for="joined_meeting_no">Non</label>
                                 </div>
                             </div>
                             <div style="border-left: 1px solid #dee2e6; height: 24px; align-self: center;"></div>
                             <div style="display: inline-flex; align-items: center;">
-                                <span class="me-2" style="flex-shrink: 0;">Unexpected Error</span>
+                                <span class="me-2" style="flex-shrink: 0;">Erreur inattendue</span>
                                 <div class="btn-group btn-group-sm" role="group">
                                     <input type="radio" class="btn-check" name="unexpected_error" id="unexpected_error_any" value="" {% if not filter_params.unexpected_error %}checked{% endif %}>
-                                    <label class="btn btn-outline-secondary" for="unexpected_error_any">Any</label>
+                                    <label class="btn btn-outline-secondary" for="unexpected_error_any">Tous</label>
                                     <input type="radio" class="btn-check" name="unexpected_error" id="unexpected_error_yes" value="yes" {% if filter_params.unexpected_error == "yes" %}checked{% endif %}>
-                                    <label class="btn btn-outline-secondary" for="unexpected_error_yes">Yes</label>
+                                    <label class="btn btn-outline-secondary" for="unexpected_error_yes">Oui</label>
                                     <input type="radio" class="btn-check" name="unexpected_error" id="unexpected_error_no" value="no" {% if filter_params.unexpected_error == "no" %}checked{% endif %}>
-                                    <label class="btn btn-outline-secondary" for="unexpected_error_no">No</label>
+                                    <label class="btn btn-outline-secondary" for="unexpected_error_no">Non</label>
                                 </div>
                             </div>
                         </div>
@@ -177,12 +178,12 @@
                     </div>
                     
                     <div class="col-md-2 d-flex align-items-end filter-item justify-content-end">
-                        <button type="submit" class="btn btn-sm btn-primary me-2">Apply</button>
+                        <button type="submit" class="btn btn-sm btn-primary me-2">Appliquer</button>
                         {% if session_type == SessionTypes.APP_SESSION %}
-                        <a href="{% url 'bots:project-app-sessions' project.object_id %}" class="btn btn-sm btn-outline-secondary">Clear</a>
+                        <a href="{% url 'bots:project-app-sessions' project.object_id %}" class="btn btn-sm btn-outline-secondary">Effacer</a>
                         {% endif %}
                         {% if session_type == SessionTypes.BOT %}
-                        <a href="{% url 'bots:project-bots' project.object_id %}" class="btn btn-sm btn-outline-secondary">Clear</a>
+                        <a href="{% url 'bots:project-bots' project.object_id %}" class="btn btn-sm btn-outline-secondary">Effacer</a>
                         {% endif %}
                     </div>
                 </form>
@@ -197,13 +198,14 @@
                     <tr>
                         <th>ID</th>
                         {% if session_type == SessionTypes.BOT %}
-                            <th>Name</th>
-                            <th>Meeting URL</th>
+                            <th>Nom</th>
+                            <th>URL de reunion</th>
                         {% endif %}
-                        <th>Status</th>
-                        <th>Last Event</th>
-                        {% if has_scheduled_bots %}<th>Join At</th>{% endif %}
-                        <th>Created</th>
+                        <th>Statut</th>
+                        <th>Dernier evenement</th>
+                        {% if has_scheduled_bots %}<th>Rejoint le</th>{% endif %}
+                        <th>Cree le</th>
+                        {% if session_type == SessionTypes.BOT %}<th>Actions</th>{% endif %}
                     </tr>
                 </thead>
                 <tbody>
@@ -255,6 +257,13 @@
                         </td>
                         {% endif %}
                         <td><small>{{ bot.created_at|date:"M d, Y H:i" }}</small></td>
+                        {% if session_type == SessionTypes.BOT %}
+                        <td>
+                            <button class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation(); deleteBot('{{ bot.object_id }}', '{{ bot.meeting_url|escapejs }}')" title="Supprimer">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                        {% endif %}
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -264,17 +273,17 @@
                 <i class="bi bi-info-circle me-2"></i>
                 {% if filter_params.start_date or filter_params.end_date or filter_params.join_at_start or filter_params.join_at_end or filter_params.ended_at_start or filter_params.ended_at_end or filter_params.states or filter_params.search or filter_params.joined_meeting or filter_params.unexpected_error %}
                     {% if session_type == SessionTypes.APP_SESSION %}
-                        No app sessions found matching the current filters.
+                        Aucune session ne correspond aux filtres actuels.
                     {% endif %}
                     {% if session_type == SessionTypes.BOT %}
-                        No bots found matching the current filters.
+                        Aucun bot ne correspond aux filtres actuels.
                     {% endif %}
                 {% else %}
                     {% if session_type == SessionTypes.APP_SESSION %}
-                        No app sessions found. Use the API to create app sessions for this project.
+                        Aucune session trouvee. Utilisez l'API pour creer des sessions.
                     {% endif %}
                     {% if session_type == SessionTypes.BOT %}
-                        No bots found. Use the API to create bots for this project.
+                        Aucun bot trouve. Utilisez l'API pour creer des bots.
                     {% endif %}
                 {% endif %}
             </div>
@@ -287,10 +296,10 @@
         <ul class="pagination justify-content-center">
             {% if page_obj.has_previous %}
             <li class="page-item">
-                <a class="page-link" href="?page=1{% for key, value in filter_params.items %}{% if key != 'page' %}{% if key == 'states' %}{% for state in value %}&states={{ state }}{% endfor %}{% elif value %}&{{ key }}={{ value }}{% endif %}{% endif %}{% endfor %}">&laquo; First</a>
+                <a class="page-link" href="?page=1{% for key, value in filter_params.items %}{% if key != 'page' %}{% if key == 'states' %}{% for state in value %}&states={{ state }}{% endfor %}{% elif value %}&{{ key }}={{ value }}{% endif %}{% endif %}{% endfor %}">&laquo; Premier</a>
             </li>
             <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in filter_params.items %}{% if key != 'page' %}{% if key == 'states' %}{% for state in value %}&states={{ state }}{% endfor %}{% elif value %}&{{ key }}={{ value }}{% endif %}{% endif %}{% endfor %}">Previous</a>
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in filter_params.items %}{% if key != 'page' %}{% if key == 'states' %}{% for state in value %}&states={{ state }}{% endfor %}{% elif value %}&{{ key }}={{ value }}{% endif %}{% endif %}{% endfor %}">Precedent</a>
             </li>
             {% endif %}
 
@@ -308,10 +317,10 @@
 
             {% if page_obj.has_next %}
             <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in filter_params.items %}{% if key != 'page' %}{% if key == 'states' %}{% for state in value %}&states={{ state }}{% endfor %}{% elif value %}&{{ key }}={{ value }}{% endif %}{% endif %}{% endfor %}">Next</a>
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in filter_params.items %}{% if key != 'page' %}{% if key == 'states' %}{% for state in value %}&states={{ state }}{% endfor %}{% elif value %}&{{ key }}={{ value }}{% endif %}{% endif %}{% endfor %}">Suivant</a>
             </li>
             <li class="page-item">
-                <a class="page-link" href="?page={{ paginator.num_pages }}{% for key, value in filter_params.items %}{% if key != 'page' %}{% if key == 'states' %}{% for state in value %}&states={{ state }}{% endfor %}{% elif value %}&{{ key }}={{ value }}{% endif %}{% endif %}{% endfor %}">Last &raquo;</a>
+                <a class="page-link" href="?page={{ paginator.num_pages }}{% for key, value in filter_params.items %}{% if key != 'page' %}{% if key == 'states' %}{% for state in value %}&states={{ state }}{% endfor %}{% elif value %}&{{ key }}={{ value }}{% endif %}{% endif %}{% endfor %}">Dernier &raquo;</a>
             </li>
             {% endif %}
         </ul>
@@ -336,6 +345,21 @@
         }
     }
     
+    function deleteBot(botObjectId, meetingUrl) {
+        if (!confirm('Supprimer definitivement ce bot (' + meetingUrl + ') et toutes ses donnees ? Cette action est irreversible.')) return;
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+        fetch('/projects/{{ project.object_id }}/bots/' + botObjectId + '/delete', {
+            method: 'POST',
+            headers: {'X-CSRFToken': csrfToken}
+        })
+        .then(r => {
+            if (!r.ok) return r.json().then(d => { throw new Error(d.error || 'Erreur'); });
+            return r.json();
+        })
+        .then(() => location.reload())
+        .catch(err => alert('Erreur : ' + err.message));
+    }
+
     // Add script to automatically open the modal if the flag is set
     document.addEventListener('DOMContentLoaded', function() {
         {% if open_create_modal %}
@@ -355,7 +379,7 @@
 
         {% endif %}
     });
-    
+
 </script>
 
 {% endblock %} 
