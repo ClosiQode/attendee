@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ shared_link.title|default:bot.bot_name|default:"Enregistrement de reunion" }}</title>
+    <title>{{ shared_link.title|default:bot.name|default:"Enregistrement de reunion" }}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f0f0f; color: #fff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
@@ -28,7 +28,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>{{ shared_link.title|default:bot.bot_name|default:"Enregistrement de reunion" }}</h1>
+            <h1>{{ shared_link.title|default:bot.name|default:"Enregistrement de reunion" }}</h1>
             <p>Partage le {{ shared_link.created_at|date:"M d, Y" }}</p>
         </div>
 
