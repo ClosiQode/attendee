@@ -57,6 +57,9 @@ AUTHENTICATION_BACKENDS = [
     "allauth.account.auth_backends.AuthenticationBackend",
 ]
 
+# Platform branding (white-label)
+PLATFORM_NAME = os.getenv("PLATFORM_NAME", "Attendee")
+
 # Django allauth config
 SITE_ID = 1
 if os.getenv("DISABLE_SIGNUP") and os.getenv("DISABLE_SIGNUP") != "false":
@@ -114,6 +117,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "attendee.context_processors.platform_settings",
             ],
         },
     },

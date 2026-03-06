@@ -80,6 +80,12 @@ LOCAL_AUDIO_CHUNK_STORAGE_PATH=/audio_chunks
 # AZURE_CONNECTION_STRING=DefaultEndpointsProtocol=https;AccountName=...
 
 # ============================================
+# MARQUE BLANCHE (optionnel)
+# ============================================
+# Nom affiche dans l'interface (remplace "Attendee")
+# PLATFORM_NAME=Mon Entreprise
+
+# ============================================
 # BOT
 # ============================================
 # Duree max d'un bot en meeting (en secondes, defaut: 14400 = 4h)
@@ -424,6 +430,7 @@ git pull origin main
 | `SITE_DOMAIN` | Domaine de l'instance | `app.attendee.dev` |
 | `ALLOWED_HOSTS` | Hosts autorises (virgules) | `localhost` |
 | `CSRF_TRUSTED_ORIGINS` | Origines CSRF (virgules) | (vide) |
+| `PLATFORM_NAME` | Nom affiche dans l'interface (marque blanche) | `Attendee` |
 | `DJANGO_DEBUG` | Mode debug | `true` |
 | `DJANGO_SSL_REQUIRE` | Forcer SSL | `true` en prod |
 | `STORAGE_PROTOCOL` | Backend stockage | `s3` |

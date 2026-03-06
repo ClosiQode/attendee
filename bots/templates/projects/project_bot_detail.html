@@ -160,17 +160,17 @@
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         {% if bot.session_type == SessionTypes.BOT %}
-            <h2 class="mb-0">Bot Details</h2>
-            <a href="{% url 'projects:project-bots' project.object_id %}" 
+            <h2 class="mb-0">Details du bot</h2>
+            <a href="{% url 'projects:project-bots' project.object_id %}"
             class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-left"></i> Back to Bots
+                <i class="bi bi-arrow-left"></i> Retour aux bots
             </a>
         {% endif %}
         {% if bot.session_type == SessionTypes.APP_SESSION %}
-            <h2 class="mb-0">App Session Details</h2>
-            <a href="{% url 'projects:project-app-sessions' project.object_id %}" 
+            <h2 class="mb-0">Details de la session</h2>
+            <a href="{% url 'projects:project-app-sessions' project.object_id %}"
             class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-left"></i> Back to App Sessions
+                <i class="bi bi-arrow-left"></i> Retour aux sessions
             </a>
         {% endif %}
     </div>
@@ -179,11 +179,11 @@
         <div class="col-md-6">
             <p><strong>ID:</strong> {{ bot.object_id }}</p>
             {% if bot.session_type == SessionTypes.BOT %}
-                <p><strong>Name:</strong> {{ bot.name }}</p>
+                <p><strong>Nom :</strong> {{ bot.name }}</p>
             {% endif %}
-            <p><strong>Created:</strong> {{ bot.created_at|date:"M d, Y H:i" }}</p>
+            <p><strong>Cree le :</strong> {{ bot.created_at|date:"M d, Y H:i" }}</p>
             {% if bot.join_at %}
-                <p><strong>Join at:</strong> {{ bot.join_at|date:"M d, Y H:i" }}
+                <p><strong>Rejoint a :</strong> {{ bot.join_at|date:"M d, Y H:i" }}
                 {% if bot.calendar_event %}
                     through &nbsp;<a href="{% url 'projects:project-calendar-event-detail' project.object_id bot.calendar_event.calendar.object_id bot.calendar_event.object_id %}" class="text-decoration-none"><i class="bi bi-calendar-event me-1"></i>{{ bot.calendar_event.name }}</a>
                 {% endif %}
@@ -194,7 +194,7 @@
             {% if bot.session_type == SessionTypes.BOT %}
                 <p><strong>Meeting URL:</strong> {{ bot.meeting_url }}</p>
             {% endif %}
-            <p><strong>Status:</strong> 
+            <p><strong>Statut :</strong> 
                 <span class="badge {% if bot.state == BotStates.READY %}bg-warning{% elif bot.state == BotStates.FATAL_ERROR %}bg-danger{% elif bot.state == BotStates.ENDED %}bg-secondary{% else %}bg-success{% endif %}">
                     {{ bot.get_state_display }}
                     {% if bot.sub_state %}
@@ -203,7 +203,7 @@
                 </span>
             </p>
             {% if credits_consumed %}
-                <p><strong>Credits used:</strong> {{ credits_consumed|floatformat:2|default:"0.00" }}</p>
+                <p><strong>Credits utilises :</strong> {{ credits_consumed|floatformat:2|default:"0.00" }}</p>
             {% endif %}
             {% if bot.deduplication_key %}
                 <p><strong>Deduplication Key:</strong> {{ bot.deduplication_key }}</p>
@@ -213,15 +213,15 @@
 
     <ul class="nav nav-tabs mb-3" role="tablist">
         <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="recordings-tab" data-bs-toggle="tab" 
+            <button class="nav-link active" id="recordings-tab" data-bs-toggle="tab"
                     data-bs-target="#recordings" type="button" role="tab">
-                Recordings
+                Enregistrements
             </button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="timeline-tab" data-bs-toggle="tab" 
+            <button class="nav-link" id="timeline-tab" data-bs-toggle="tab"
                     data-bs-target="#timeline" type="button" role="tab">
-                Event Timeline
+                Chronologie
             </button>
         </li>
         {% if webhook_delivery_attempts %}
@@ -241,9 +241,9 @@
         </li>
         {% endif %}
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="chat-tab" data-bs-toggle="tab" 
+            <button class="nav-link" id="chat-tab" data-bs-toggle="tab"
                     data-bs-target="#chat" type="button" role="tab">
-                Chat Messages
+                Messages
             </button>
         </li>
         {% if participants %}
@@ -256,17 +256,17 @@
         {% endif %}
         {% if resource_snapshots %}
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="resource-tab" data-bs-toggle="tab" 
+            <button class="nav-link" id="resource-tab" data-bs-toggle="tab"
                     data-bs-target="#resource" type="button" role="tab">
-                Resource Usage
+                Ressources
             </button>
         </li>
         {% endif %}
         {% if network_stats %}
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="network-tab" data-bs-toggle="tab" 
+            <button class="nav-link" id="network-tab" data-bs-toggle="tab"
                     data-bs-target="#network" type="button" role="tab">
-                Network Stats
+                Reseau
             </button>
         </li>
         {% endif %}
@@ -279,7 +279,7 @@
                  hx-trigger="load"
                  hx-indicator="#recordings-loading">
                 <div id="recordings-loading" class="text-center p-4">
-                    <p class="mt-2 text-muted">Loading recordings...</p>
+                    <p class="mt-2 text-muted">Chargement...</p>
                 </div>
             </div>
         </div>
@@ -310,7 +310,7 @@
                             {% endif %}
                             {% if event.debug_screenshots.all %}
                                 <div class="mt-2">
-                                    <h6 class="text-muted mb-2">Debug Files:</h6>
+                                    <h6 class="text-muted mb-2">Fichiers de debug :</h6>
                                     {% for screenshot in event.debug_screenshots.all %}
                                         {% if screenshot.file.name|stringformat:"s"|slice:"-4:" == ".mp4" %}
                                             <video class="img-fluid mb-2" controls style="max-width: 300px;">
@@ -318,10 +318,10 @@
                                                 Your browser does not support the video tag.
                                             </video>
                                         {% elif screenshot.file.name|stringformat:"s"|slice:"-6:" == ".mhtml" %}
-                                            <a href="{{ screenshot.url }}" 
-                                                class="btn btn-outline-secondary mb-2" 
+                                            <a href="{{ screenshot.url }}"
+                                                class="btn btn-outline-secondary mb-2"
                                                 target="_blank">
-                                                Download MHTML
+                                                Telecharger MHTML
                                             </a>
                                         {% else %}
                                             <img src="{{ screenshot.url }}" 
@@ -339,7 +339,7 @@
                     {% endfor %}
                 </div>
             {% else %}
-                <div class="alert alert-info">No events recorded.</div>
+                <div class="alert alert-info">Aucun evenement enregistre.</div>
             {% endif %}
             </div>
         </div>
@@ -366,7 +366,7 @@
                     {% endfor %}
                 </div>
             {% else %}
-                <div class="alert alert-info">No chat messages recorded.</div>
+                <div class="alert alert-info">Aucun message enregistre.</div>
             {% endif %}
         </div>
 
@@ -378,11 +378,11 @@
                         <thead>
                             <tr>
                                 <th>Webhook URL</th>
-                                <th>Trigger Type</th>
+                                <th>Type</th>
                                 <th>Status</th>
-                                <th>Attempts</th>
-                                <th>Last Attempt</th>
-                                <th>Succeeded At</th>
+                                <th>Tentatives</th>
+                                <th>Derniere tentative</th>
+                                <th>Reussi le</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -397,7 +397,7 @@
                                         </span>
                                     </td>
                                     <td>{{ attempt.attempt_count }}</td>
-                                    <td>{% if attempt.last_attempt_at %}{{ attempt.last_attempt_at|date:"M d, Y H:i:s" }}{% else %}Not attempted{% endif %}</td>
+                                    <td>{% if attempt.last_attempt_at %}{{ attempt.last_attempt_at|date:"M d, Y H:i:s" }}{% else %}Pas encore tente{% endif %}</td>
                                     <td>{% if attempt.succeeded_at %}{{ attempt.succeeded_at|date:"M d, Y H:i:s" }}{% else %}-{% endif %}</td>
                                     <td>
                                         {% if attempt.status != WebhookDeliveryAttemptStatus.PENDING %}
@@ -409,7 +409,7 @@
                                                 hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
                                                 hx-on::after-request="this.style.visibility='hidden'"
                                             >
-                                                Resend
+                                                Renvoyer
                                             </button>
                                         {% endif %}
                                     </td>
@@ -421,7 +421,7 @@
                                                 <div class="accordion-item">
                                                     <h2 class="accordion-header" id="heading{{ attempt.id }}">
                                                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ attempt.id }}" aria-expanded="false" aria-controls="collapse{{ attempt.id }}">
-                                                            Webhook Details
+                                                            Details du webhook
                                                         </button>
                                                     </h2>
                                                     <div id="collapse{{ attempt.id }}" class="accordion-collapse collapse" aria-labelledby="heading{{ attempt.id }}" data-bs-parent="#responseAccordion{{ attempt.id }}">
@@ -438,13 +438,13 @@
                                                                     </button>
                                                                 </li>
                                                                 <li class="nav-item" role="presentation">
-                                                                    <button class="nav-link" 
-                                                                            id="responses-tab-{{ attempt.id }}" 
-                                                                            data-bs-toggle="tab" 
-                                                                            data-bs-target="#responses-{{ attempt.id }}" 
-                                                                            type="button" 
+                                                                    <button class="nav-link"
+                                                                            id="responses-tab-{{ attempt.id }}"
+                                                                            data-bs-toggle="tab"
+                                                                            data-bs-target="#responses-{{ attempt.id }}"
+                                                                            type="button"
                                                                             role="tab">
-                                                                        Responses
+                                                                        Reponses
                                                                     </button>
                                                                 </li>
                                                             </ul>
@@ -453,7 +453,7 @@
                                                                     {% if attempt.payload %}
                                                                         <pre class="small mb-0">{{ attempt.payload|pprint }}</pre>
                                                                     {% else %}
-                                                                        <div class="alert alert-info">No payload data available.</div>
+                                                                        <div class="alert alert-info">Aucune donnee de payload.</div>
                                                                     {% endif %}
                                                                 </div>
                                                                 <div class="tab-pane fade" id="responses-{{ attempt.id }}" role="tabpanel">
@@ -466,7 +466,7 @@
                                                                             {% endfor %}
                                                                         </ul>
                                                                     {% else %}
-                                                                        <div class="alert alert-info">No response data available.</div>
+                                                                        <div class="alert alert-info">Aucune donnee de reponse.</div>
                                                                     {% endif %}
                                                                 </div>
                                                             </div>
@@ -482,7 +482,7 @@
                     </table>
                 </div>
             {% else %}
-                <div class="alert alert-info">No webhook delivery attempts for this bot.</div>
+                <div class="alert alert-info">Aucune tentative de webhook.</div>
             {% endif %}
         </div>
 
@@ -493,8 +493,8 @@
                     <table class="table table-striped">
                         <thead>
                             <tr>
-                                <th>Property</th>
-                                <th>Value</th>
+                                <th>Propriete</th>
+                                <th>Valeur</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -510,7 +510,7 @@
                     </table>
                 </div>
             {% else %}
-                <div class="alert alert-info">No metadata available for this bot.</div>
+                <div class="alert alert-info">Aucune metadata disponible.</div>
             {% endif %}
         </div>
 
@@ -545,9 +545,9 @@
                                                         <div class="event-content flex-grow-1">
                                                             <div class="event-type fw-semibold">
                                                                 {% if event.event_type == ParticipantEventTypes.JOIN %}
-                                                                    Joined
+                                                                    Rejoint
                                                                 {% elif event.event_type == ParticipantEventTypes.LEAVE %}
-                                                                    Left
+                                                                    Parti
                                                                 {% endif %}
                                                             </div>
                                                             <div class="event-timestamp text-muted small">{{ event.created_at|date:"M d, Y H:i:s" }}</div>
@@ -565,7 +565,7 @@
                                         </div>                                       
                                     </div>
                                 {% else %}
-                                    <div class="text-muted small">No events recorded</div>
+                                    <div class="text-muted small">Aucun evenement</div>
                                 {% endif %}
                             </div>
                         </div>
@@ -579,19 +579,19 @@
         {% if resource_snapshots %}
         <div class="tab-pane fade" id="resource" role="tabpanel">
             <div class="mb-3">
-                <p><strong>Maximum RAM Usage:</strong> {{ max_ram_usage }} MB</p>
-                <p><strong>Maximum CPU Usage:</strong> {{ max_cpu_usage }} millicores</p>
-                <p><strong>Maximum PostgreSQL Connection Count:</strong> {{ max_db_connection_count }}</p>
-                <p><strong>Maximum Redis Connection Count:</strong> {{ max_redis_connection_count }}</p>
+                <p><strong>RAM max :</strong> {{ max_ram_usage }} MB</p>
+                <p><strong>CPU max :</strong> {{ max_cpu_usage }} millicores</p>
+                <p><strong>Connexions PostgreSQL max :</strong> {{ max_db_connection_count }}</p>
+                <p><strong>Connexions Redis max :</strong> {{ max_redis_connection_count }}</p>
             </div>
             <div class="table-responsive">
                 <table class="table table-striped">
                     <thead>
                         <tr>
-                            <th>Timestamp</th>
-                            <th>RAM Usage (MB)</th>
-                            <th>CPU Usage (millicores)</th>
-                            <th>Top 5 Processes by RAM Usage (MB)</th>
+                            <th>Date</th>
+                            <th>RAM (Mo)</th>
+                            <th>CPU (millicores)</th>
+                            <th>Top 5 processus par RAM (Mo)</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -628,22 +628,22 @@
             <div class="mb-3">
                 <div class="row">
                     <div class="col-md-6">
-                        <p><strong>Peak RX Throughput:</strong> {{ network_stats.max_rx_bytes_per_sec|floatformat:0 }} bytes/sec</p>
-                        <p><strong>Peak TX Throughput:</strong> {{ network_stats.max_tx_bytes_per_sec|floatformat:0 }} bytes/sec</p>
-                        <p><strong>Peak RX Packet Rate:</strong> {{ network_stats.max_rx_packets_per_sec|floatformat:0 }} pkt/sec</p>
-                        <p><strong>Peak TX Packet Rate:</strong> {{ network_stats.max_tx_packets_per_sec|floatformat:0 }} pkt/sec</p>
+                        <p><strong>Debit RX max :</strong> {{ network_stats.max_rx_bytes_per_sec|floatformat:0 }} bytes/sec</p>
+                        <p><strong>Debit TX max :</strong> {{ network_stats.max_tx_bytes_per_sec|floatformat:0 }} bytes/sec</p>
+                        <p><strong>Paquets RX max :</strong> {{ network_stats.max_rx_packets_per_sec|floatformat:0 }} pkt/sec</p>
+                        <p><strong>Paquets TX max :</strong> {{ network_stats.max_tx_packets_per_sec|floatformat:0 }} pkt/sec</p>
                     </div>
                     <div class="col-md-6">
-                        <p><strong>Total RX Dropped:</strong> 
+                        <p><strong>RX perdus :</strong>
                             <span class="{% if network_stats.total_rx_dropped > 0 %}text-danger fw-bold{% endif %}">{{ network_stats.total_rx_dropped }}</span>
                         </p>
-                        <p><strong>Total TX Dropped:</strong> 
+                        <p><strong>TX perdus :</strong>
                             <span class="{% if network_stats.total_tx_dropped > 0 %}text-danger fw-bold{% endif %}">{{ network_stats.total_tx_dropped }}</span>
                         </p>
-                        <p><strong>Total RX Errors:</strong> 
+                        <p><strong>Erreurs RX :</strong>
                             <span class="{% if network_stats.total_rx_errors > 0 %}text-danger fw-bold{% endif %}">{{ network_stats.total_rx_errors }}</span>
                         </p>
-                        <p><strong>Total TX Errors:</strong> 
+                        <p><strong>Erreurs TX :</strong>
                             <span class="{% if network_stats.total_tx_errors > 0 %}text-danger fw-bold{% endif %}">{{ network_stats.total_tx_errors }}</span>
                         </p>
                     </div>
@@ -653,15 +653,15 @@
                 <table class="table table-striped">
                     <thead>
                         <tr>
-                            <th>Timestamp</th>
+                            <th>Date</th>
                             <th>RX (bytes/sec)</th>
                             <th>TX (bytes/sec)</th>
                             <th>RX (pkt/sec)</th>
                             <th>TX (pkt/sec)</th>
                             <th>RX Dropped</th>
-                            <th>RX Errors</th>
+                            <th>Erreurs RX</th>
                             <th>TX Dropped</th>
-                            <th>TX Errors</th>
+                            <th>Erreurs TX</th>
                         </tr>
                     </thead>
                     <tbody>

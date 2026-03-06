@@ -8,7 +8,7 @@
         <div class="col-md-3 col-lg-2 sidebar py-3 position-fixed overflow-auto" style="height: 100vh;">
             <div class="d-flex flex-column h-100">
                 <h5 class="px-3 mb-3">
-                    <img src="{% static 'images/logo_with_text.svg' %}" alt="Attendee Logo" class="img-fluid" style="max-width: 250px;">
+                    <img src="{% static 'images/logo_with_text.svg' %}" alt="{{ platform_name }}" class="img-fluid" style="max-width: 250px;">
                 </h5>
 
                 <!-- Project selector -->
@@ -34,7 +34,7 @@
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <a class="dropdown-item d-flex align-items-center" style="font-size: 0.9rem; max-width: 100%;" onclick="createNewProject()">
-                                        <i class="bi bi-plus-lg me-2"></i> Create new project
+                                        <i class="bi bi-plus-lg me-2"></i> Nouveau projet
                                     </a>
                                 </li>
                             {% endif %}
@@ -52,7 +52,7 @@
                        hx-swap="outerHTML"
                        hx-push-url="true"
                        onclick="setActiveLink(this)">
-                        <i class="bi bi-speedometer2"></i> Quick start
+                        <i class="bi bi-speedometer2"></i> Demarrage rapide
                     </a>
                     <a class="nav-link" 
                        hx-get="{% url 'projects:project-api-keys' project.object_id %}" 
@@ -67,14 +67,14 @@
                         href="https://docs.attendee.dev"
                         target="_blank"
                         rel="noopener noreferrer">
-                        <i class="bi bi-book"></i> Docs
+                        <i class="bi bi-book"></i> Documentation
                     </a>
                     
                     <!-- Settings dropdown menu -->
                     <div class="settings-dropdown">
                         <a class="nav-link" href="#" 
                            onclick="toggleSettingsMenu(event)">
-                            <i class="bi bi-gear"></i> Settings <span style="margin-left: 1px;" class="settings-caret-container">
+                            <i class="bi bi-gear"></i> Parametres <span style="margin-left: 1px;" class="settings-caret-container">
                               <svg width="21" height="21" viewBox="0 0 14 14" fill="none" class="settings-caret">
                                 <path d="M4.3225 5.0108L7 7.68247L9.6775 5.0108L10.5 5.8333L7 9.3333L3.5 5.8333L4.3225 5.0108Z" fill="currentcolor"></path>
                               </svg>
@@ -88,7 +88,7 @@
                                hx-swap="outerHTML"
                                hx-push-url="true"
                                onclick="setActiveLink(this)">
-                                <i class="bi bi-lock"></i> Credentials
+                                <i class="bi bi-lock"></i> Identifiants
                             </a>
                             {% if project.organization.is_webhooks_enabled %}
                             <a class="nav-link ps-4"
@@ -109,7 +109,7 @@
                                 hx-swap="outerHTML"
                                 hx-push-url="true"
                                 onclick="setActiveLink(this)">
-                                    <i class="bi bi-card-text"></i> Project
+                                    <i class="bi bi-card-text"></i> Projet
                                 </a>
                             {% endif %}
                         </div>
@@ -135,7 +135,7 @@
                        hx-swap="outerHTML"
                        hx-push-url="true"
                        onclick="setActiveLink(this)">
-                        <i class="bi bi-calendar3"></i> Calendars
+                        <i class="bi bi-calendar3"></i> Calendriers
                     </a>
 
                     {% if project.organization.is_app_sessions_enabled %}
@@ -161,7 +161,7 @@
                         <div class="account-dropdown">
                             <a class="nav-link" href="#" 
                             onclick="toggleAccountMenu(event)">
-                                <i class="bi bi-x-diamond-fill"></i> Account <span style="margin-left: 1px;" class="account-caret-container">
+                                <i class="bi bi-x-diamond-fill"></i> Compte <span style="margin-left: 1px;" class="account-caret-container">
                                 <svg width="21" height="21" viewBox="0 0 14 14" fill="none" class="account-caret">
                                     <path d="M4.3225 5.0108L7 7.68247L9.6775 5.0108L10.5 5.8333L7 9.3333L3.5 5.8333L4.3225 5.0108Z" fill="currentcolor"></path>
                                 </svg>
@@ -175,7 +175,7 @@
                                 hx-swap="outerHTML"
                                 hx-push-url="true"
                                 onclick="setActiveLink(this)">
-                                    <i class="bi bi-people"></i> Team
+                                    <i class="bi bi-people"></i> Equipe
                                 </a>
                                 {% if charge_credits_for_bots_setting %}
                                 <a class="nav-link ps-4"
@@ -185,7 +185,7 @@
                                 hx-swap="outerHTML"
                                 hx-push-url="true"
                                 onclick="setActiveLink(this)">
-                                    <i class="bi bi-credit-card"></i> Billing
+                                    <i class="bi bi-credit-card"></i> Facturation
                                 </a>
                                 {% endif %}
                             </div>
@@ -197,7 +197,7 @@
                     <form method="post" action="{% url 'account_logout' %}" class="m-0">
                         {% csrf_token %}
                         <button type="submit" class="nav-link border-0 bg-transparent w-100 text-start">
-                            <i class="bi bi-box-arrow-right"></i> Logout
+                            <i class="bi bi-box-arrow-right"></i> Deconnexion
                         </button>
                     </form>
                 </div>
@@ -211,7 +211,7 @@
         <div class="col-md-9 col-lg-10 py-3">
             {% if project.organization.credits < 0 %}
             <div class="alert alert-danger mb-3" role="alert">
-                <strong>Your account has a negative credit balance.</strong> Please <a href="{% url 'projects:project-billing' project.object_id %}" class="alert-link">top up your credits</a> to continue creating bots.
+                <strong>Votre compte a un solde de credits negatif.</strong> Veuillez <a href="{% url 'projects:project-billing' project.object_id %}" class="alert-link">recharger vos credits</a> pour continuer a creer des bots.
             </div>
             {% endif %}
             <div id="content">
@@ -402,21 +402,21 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="createProjectModalLabel">Add new project</h5>
+                <h5 class="modal-title" id="createProjectModalLabel">Nouveau projet</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form action="{% url 'projects:create-project' %}" method="post">
                 {% csrf_token %}
                 <div class="modal-body">
-                    <label for="projectName" class="form-label">Project Name</label>
+                    <label for="projectName" class="form-label">Nom du projet</label>
                     <div class="mb-2">
                         <input type="text" class="form-control" id="projectName" name="name" required maxlength="100">
                     </div>
-                    <div class="form-text">Projects are used to organize API keys, webhooks and credentials. Create a separate project for each environment - development, staging, production to keep them separated.</div>
+                    <div class="form-text">Les projets permettent d'organiser les cles API, webhooks et identifiants. Creez un projet separe pour chaque environnement (developpement, recette, production).</div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Create Project</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Creer le projet</button>
                 </div>
             </form>
         </div>
