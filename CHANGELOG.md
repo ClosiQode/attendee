@@ -14,6 +14,11 @@ Format base sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
 - Page de visualisation HTML5 pour les videos partagees
 - Endpoints API pour creer, lister et desactiver les liens de partage
 - Support du telechargement et du streaming pour le stockage local
+- Route Django pour servir les fichiers locaux (recordings et audio chunks) avec authentification
+- Configuration SMTP email configurable via `.env` (`EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USE_TLS`, etc.)
+- Variable `DISABLE_SIGNUP` pour desactiver les inscriptions publiques
+- Variables `EMAIL_PORT` et `EMAIL_USE_SSL` ajoutees au fichier .env
 
 ### Modifie
 - Rendu le `soft_time_limit` Celery de la tache `run_bot` configurable via la variable d'environnement `BOT_SOFT_TIME_LIMIT_SECONDS` (defaut: 14400s = 4h, ancien: 3600s = 1h)
+- Ajout de `base_url` aux backends de stockage local pour generer des URLs correctes

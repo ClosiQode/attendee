@@ -21,7 +21,7 @@ import os
 from django.conf import settings
 from django.contrib import admin
 from django.http import HttpResponse, JsonResponse
-from django.urls import include, path
+from django.urls import include, path, re_path
 from drf_spectacular.views import (
     SpectacularAPIView,
     SpectacularRedocView,
@@ -88,4 +88,28 @@ if settings.DEBUG:
             SpectacularRedocView.as_view(url_name="schema"),
             name="redoc",
         ),
+    ]
+
+# Serve local recording files when using local storage
+if settings.STORAGE_PROTOCOL == "local":
+    from django.views.static import serve as static_serve
+
+    def serve_local_recording(request, path):
+        from django.http import Http404
+
+        # Only authenticated users can access recordings
+        if not request.user.is_authenticated:
+            raise Http404
+        return static_serve(request, path, document_root=settings.LOCAL_RECORDING_STORAGE_PATH)
+
+    def serve_local_audio_chunk(request, path):
+        from django.http import Http404
+
+        if not request.user.is_authenticated:
+            raise Http404
+        return static_serve(request, path, document_root=settings.LOCAL_AUDIO_CHUNK_STORAGE_PATH)
+
+    urlpatterns += [
+        re_path(r"^recordings/(?P<path>.*)$", serve_local_recording, name="local-recording"),
+        re_path(r"^audio_chunks/(?P<path>.*)$", serve_local_audio_chunk, name="local-audio-chunk"),
     ]

@@ -100,7 +100,16 @@ BOT_SOFT_TIME_LIMIT_SECONDS=14400
 # EMAIL_HOST=smtp.mailgun.org
 # EMAIL_HOST_USER=postmaster@mail.votredomaine.com
 # EMAIL_HOST_PASSWORD=votre-mot-de-passe-smtp
+# EMAIL_PORT=587
+# EMAIL_USE_TLS=true
+# EMAIL_USE_SSL=false
 # DEFAULT_FROM_EMAIL=noreply@votredomaine.com
+
+# ============================================
+# INSCRIPTION (optionnel)
+# ============================================
+# Desactiver les inscriptions publiques (seuls les comptes existants peuvent se connecter)
+# DISABLE_SIGNUP=true
 ```
 
 ## 4. Demarrer les services
@@ -427,7 +436,11 @@ git pull origin main
 | `BOT_SOFT_TIME_LIMIT_SECONDS` | Timeout max bot | `14400` (4h) |
 | `DATABASE_URL` | URL base de donnees externe | (PostgreSQL Docker) |
 | `REDIS_URL` | URL Redis | `redis://redis:6379/5` |
-| `EMAIL_HOST` | Serveur SMTP | `smtp.mailgun.org` |
+| `EMAIL_HOST` | Serveur SMTP (active le mode SMTP) | (vide, mode console) |
 | `EMAIL_HOST_USER` | Utilisateur SMTP | (vide) |
 | `EMAIL_HOST_PASSWORD` | Mot de passe SMTP | (vide) |
-| `DEFAULT_FROM_EMAIL` | Expediteur emails | `noreply@mail.attendee.dev` |
+| `EMAIL_PORT` | Port SMTP | `587` |
+| `EMAIL_USE_TLS` | Utiliser TLS | `true` |
+| `EMAIL_USE_SSL` | Utiliser SSL | `false` |
+| `DEFAULT_FROM_EMAIL` | Expediteur emails | `noreply@attendee.dev` |
+| `DISABLE_SIGNUP` | Desactiver les inscriptions | `false` |

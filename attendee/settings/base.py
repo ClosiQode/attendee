@@ -271,6 +271,7 @@ elif STORAGE_PROTOCOL == "local":
         "BACKEND": "django.core.files.storage.FileSystemStorage",
         "OPTIONS": {
             "location": LOCAL_RECORDING_STORAGE_PATH,
+            "base_url": "/recordings/",
         },
     }
 
@@ -278,6 +279,7 @@ elif STORAGE_PROTOCOL == "local":
         "BACKEND": "django.core.files.storage.FileSystemStorage",
         "OPTIONS": {
             "location": LOCAL_RECORDING_STORAGE_PATH,
+            "base_url": "/recordings/",
         },
     }
 
@@ -285,6 +287,7 @@ elif STORAGE_PROTOCOL == "local":
         "BACKEND": "django.core.files.storage.FileSystemStorage",
         "OPTIONS": {
             "location": LOCAL_AUDIO_CHUNK_STORAGE_PATH,
+            "base_url": "/audio_chunks/",
         },
     }
 else:
