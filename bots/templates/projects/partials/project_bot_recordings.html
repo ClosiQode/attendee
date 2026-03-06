@@ -34,7 +34,7 @@
                                 </video>
                                 {% include 'projects/partials/project_bot_recording_speaker_timeline.html' with speaker_timeline=recording.speaker_timeline %}
                                 <!-- Share button -->
-                                {% if recording.is_default_recording %}
+                                {% if recording.is_default_recording or forloop.first %}
                                 <div class="share-section mt-3">
                                     <button class="btn btn-outline-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#sharePanel" aria-expanded="false">
                                         <i class="bi bi-share"></i> Share

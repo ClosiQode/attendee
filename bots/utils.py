@@ -596,6 +596,7 @@ def generate_recordings_json_for_bot_detail_view(bot):
                 "state": recording.state,
                 "recording_type": recording.bot.recording_type(),
                 "url": recording.url,
+                "is_default_recording": recording.is_default_recording,
                 "transcriptions": [
                     realtime_transcription,
                     *async_transcriptions,
