@@ -94,10 +94,10 @@ class SharedRecordingPageView(APIView):
     authentication_classes = []
 
     def get(self, request, token):
-        shared_link = get_object_or_404(SharedRecordingLink, token=token)
+        shared_link = SharedRecordingLink.objects.filter(token=token).first()
 
-        if not shared_link.is_valid:
-            raise Http404("This shared link has expired or been deactivated.")
+        if not shared_link or not shared_link.is_valid:
+            return render(request, "shared_recording_expired.html", status=404)
 
         recording = shared_link.recording
 

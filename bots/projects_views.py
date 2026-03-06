@@ -5,7 +5,6 @@ import os
 import uuid
 
 import stripe
-from allauth.account.utils import send_email_confirmation
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied, ValidationError
@@ -1146,15 +1145,52 @@ class InviteUserView(AdminRequiredMixin, ProjectUrlContextMixin, View):
                         project = Project.objects.get(object_id=project_id, organization=request.user.organization)
                         ProjectAccess.objects.create(project=project, user=user)
 
-                # Send verification email
-                send_email_confirmation(request, user, email=email)
+                # Mark email as verified directly (admin invited them, no need for verification)
+                from allauth.account.models import EmailAddress
+
+                EmailAddress.objects.create(
+                    user=user,
+                    email=email,
+                    verified=True,
+                    primary=True,
+                )
+
+                # Send a notification email with password setup link
+                from allauth.account.forms import ResetPasswordForm
+
+                form = ResetPasswordForm(data={"email": email})
+                if form.is_valid():
+                    form.save(request)
 
                 # Return success response
-                return HttpResponse("Invitation sent successfully", status=200)
+                return HttpResponse("Invitation envoyee avec succes", status=200)
 
         except Exception as e:
             logger.error(f"Error creating invited user: {str(e)}")
-            return HttpResponse("An error occurred while sending the invitation", status=500)
+            return HttpResponse("Une erreur s'est produite lors de l'envoi de l'invitation", status=500)
+
+
+class DeleteUserView(AdminRequiredMixin, ProjectUrlContextMixin, View):
+    def post(self, request, object_id):
+        user_object_id = request.POST.get("user_object_id")
+
+        if not user_object_id:
+            return HttpResponse("L'identifiant de l'utilisateur est requis", status=400)
+
+        user_to_delete = get_object_or_404(User, object_id=user_object_id, organization=request.user.organization)
+
+        if user_to_delete.id == request.user.id:
+            return HttpResponse("Vous ne pouvez pas supprimer votre propre compte", status=400)
+
+        try:
+            email = user_to_delete.email
+            # Delete project accesses and the user
+            ProjectAccess.objects.filter(user=user_to_delete).delete()
+            user_to_delete.delete()
+            return HttpResponse(f"L'utilisateur {email} a ete supprime avec succes", status=200)
+        except Exception as e:
+            logger.error(f"Error deleting user: {str(e)}")
+            return HttpResponse("Une erreur s'est produite lors de la suppression", status=500)
 
 
 class CreateWebhookView(LoginRequiredMixin, ProjectUrlContextMixin, View):

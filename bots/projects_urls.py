@@ -172,6 +172,11 @@ urlpatterns = [
         name="edit-user",
     ),
     path(
+        "<str:object_id>/team/users/delete",
+        projects_views.DeleteUserView.as_view(),
+        name="delete-user",
+    ),
+    path(
         "<str:object_id>/calendars",
         projects_views.ProjectCalendarsView.as_view(),
         name="project-calendars",

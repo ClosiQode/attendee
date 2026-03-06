@@ -21,6 +21,16 @@ Format base sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
 - Variable `DISABLE_SIGNUP` pour desactiver les inscriptions publiques
 - Variables `EMAIL_PORT` et `EMAIL_USE_SSL` ajoutees au fichier .env
 
+- Champ `title` personnalisable pour les liens de partage
+- Affichage de la taille des fichiers d'enregistrement
+- Bouton de suppression des enregistrements
+- Bouton de suppression des membres d'equipe avec confirmation
+- Marque blanche : `PLATFORM_NAME` configurable via `.env` pour remplacer "Attendee"
+- Masquage du lien "Creer un compte" quand `DISABLE_SIGNUP=true`
+- Les utilisateurs invites n'ont plus besoin de verifier leur email (email marque comme verifie automatiquement, lien de configuration du mot de passe envoye directement)
+
 ### Modifie
+- Traduction complete de l'interface en francais : pages d'authentification, sidebar, dashboard, detail bot, calendriers, equipe, partage de videos
 - Rendu le `soft_time_limit` Celery de la tache `run_bot` configurable via la variable d'environnement `BOT_SOFT_TIME_LIMIT_SECONDS` (defaut: 14400s = 4h, ancien: 3600s = 1h)
 - Ajout de `base_url` aux backends de stockage local pour generer des URLs correctes
+- Page de partage en marque blanche (suppression du footer "Powered by Attendee")

@@ -2,9 +2,9 @@
 
 <div class="container mt-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Team</h2>
+    <h2>Equipe</h2>
     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#inviteUserModal">
-      <i class="fas fa-plus me-2"></i>Invite User
+      <i class="fas fa-plus me-2"></i>Inviter un utilisateur
     </button>
   </div>
 
@@ -24,7 +24,7 @@
 
   <div class="card">
     <div class="card-header">
-      <h5 class="card-title mb-0">Members</h5>
+      <h5 class="card-title mb-0">Membres</h5>
     </div>
     <div class="card-body">
       {% if users %}
@@ -34,9 +34,9 @@
               <tr>
                 <th>Email</th>
                 <th>Role</th>
-                <th>Project Access</th>
-                <th>Date Joined</th>
-                <th>Status</th>
+                <th>Acces aux projets</th>
+                <th>Date d'inscription</th>
+                <th>Statut</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -46,9 +46,9 @@
                   <td>{{ user.email }}</td>
                   <td>
                     {% if user.role == 'admin' %}
-                      <span class="badge bg-primary">Administrator</span>
+                      <span class="badge bg-primary">Administrateur</span>
                     {% else %}
-                      <span class="badge bg-secondary">Regular User</span>
+                      <span class="badge bg-secondary">Utilisateur standard</span>
                     {% endif %}
                   </td>
                   <td>
@@ -65,24 +65,31 @@
                   <td>{{ user.date_joined|date:"M d, Y" }}</td>
                   <td>
                     {% if not user.is_active %}
-                      <span class="badge bg-danger">Disabled</span>
+                      <span class="badge bg-danger">Desactive</span>
                     {% elif user.last_login %}
-                      <span class="badge bg-success">Active</span>
+                      <span class="badge bg-success">Actif</span>
                     {% else %}
-                      <span class="badge bg-warning">Pending</span>
+                      <span class="badge bg-warning">En attente</span>
                     {% endif %}
                   </td>
                   <td>
                     {% if user.id != request.user.id %}
-                      <button type="button" class="btn btn-sm btn-outline-primary edit-user-btn" 
+                      <button type="button" class="btn btn-sm btn-outline-primary edit-user-btn"
                               data-user-object-id="{{ user.object_id }}"
                               data-user-email="{{ user.email }}"
                               data-user-role="{{ user.role }}"
                               data-user-active="{{ user.is_active|yesno:'true,false' }}"
                               {% if user.role != 'admin' %}data-user-project-access="{% for access in user.project_accesses.all %}{{ access.project.object_id }}{% if not forloop.last %},{% endif %}{% endfor %}"{% endif %}
-                              data-bs-toggle="modal" 
+                              data-bs-toggle="modal"
                               data-bs-target="#editUserModal">
-                        <i class="fas fa-edit"></i> Edit
+                        <i class="fas fa-edit"></i> Modifier
+                      </button>
+                      <button type="button" class="btn btn-sm btn-outline-danger delete-user-btn ms-1"
+                              data-user-object-id="{{ user.object_id }}"
+                              data-user-email="{{ user.email }}"
+                              data-bs-toggle="modal"
+                              data-bs-target="#deleteUserModal">
+                        <i class="fas fa-trash"></i> Supprimer
                       </button>
                     {% endif %}
                   </td>
@@ -94,7 +101,7 @@
       {% else %}
         <div class="text-center py-4">
           <i class="fas fa-users fa-3x text-muted mb-3"></i>
-          <p class="text-muted">No team members found.</p>
+          <p class="text-muted">Aucun membre dans l'equipe.</p>
         </div>
       {% endif %}
     </div>
@@ -106,30 +113,30 @@
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="inviteUserModalLabel">Invite User</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <h5 class="modal-title" id="inviteUserModalLabel">Inviter un utilisateur</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
       </div>
       <form id="inviteUserForm" action="{% url 'projects:invite-user' project.object_id %}" method="post">
         {% csrf_token %}
         <div class="modal-body">
           <div class="mb-3">
-            <label for="inviteEmail" class="form-label">Email Address</label>
-            <input type="email" class="form-control" id="inviteEmail" name="email" required placeholder="Enter email address">
+            <label for="inviteEmail" class="form-label">Adresse email</label>
+            <input type="email" class="form-control" id="inviteEmail" name="email" required placeholder="Entrez une adresse email">
           </div>
-          
+
           <div class="mb-3">
-            <label class="form-label">User Role</label>
+            <label class="form-label">Role de l'utilisateur</label>
             <div class="form-check form-switch">
               <input class="form-check-input" type="checkbox" id="roleToggle" name="is_admin" value="true">
               <label class="form-check-label" for="roleToggle">
-                <span id="roleLabel">Regular User</span>
+                <span id="roleLabel">Utilisateur standard</span>
               </label>
             </div>
-            <div class="form-text" id="roleDescription">This user will have access only to selected projects.</div>
+            <div class="form-text" id="roleDescription">Cet utilisateur aura acces uniquement aux projets selectionnes.</div>
           </div>
 
           <div id="projectAccessSection" class="mb-3">
-            <label class="form-label">Project Access <span class="text-danger">*</span></label>
+            <label class="form-label">Acces aux projets <span class="text-danger">*</span></label>
             <div class="border rounded p-3" style="max-height: 200px; overflow-y: auto;">
               {% for project in projects %}
                 <div class="form-check">
@@ -140,19 +147,19 @@
                 </div>
               {% endfor %}
             </div>
-            <div class="form-text">Select at least one project that this user can access.</div>
+            <div class="form-text">Selectionnez au moins un projet auquel cet utilisateur aura acces.</div>
             <div id="projectSelectionError" class="text-danger d-none" style="font-size: 0.875em;">
-              Please select at least one project.
+              Veuillez selectionner au moins un projet.
             </div>
           </div>
 
           <div id="inviteError" class="alert alert-danger d-none" role="alert"></div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
           <button type="submit" class="btn btn-primary" id="inviteSubmitBtn">
             <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
-            Send Invitation
+            Envoyer l'invitation
           </button>
         </div>
       </form>
@@ -165,8 +172,8 @@
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="editUserModalLabel">Edit User</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <h5 class="modal-title" id="editUserModalLabel">Modifier l'utilisateur</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
       </div>
       <form id="editUserForm" action="{% url 'projects:edit-user' project.object_id %}" method="post">
         {% csrf_token %}
@@ -174,23 +181,23 @@
         <input type="hidden" id="editUserActiveInput" name="is_active" value="">
         <div class="modal-body">
           <div class="mb-3">
-            <label class="form-label">Email Address</label>
+            <label class="form-label">Adresse email</label>
             <div class="form-control bg-light" id="editUserEmail">-</div>
           </div>
-          
+
           <div class="mb-3">
-            <label class="form-label">User Role</label>
+            <label class="form-label">Role de l'utilisateur</label>
             <div class="form-check form-switch">
               <input class="form-check-input" type="checkbox" id="editRoleToggle" name="is_admin" value="true">
               <label class="form-check-label" for="editRoleToggle">
-                <span id="editRoleLabel">Regular User</span>
+                <span id="editRoleLabel">Utilisateur standard</span>
               </label>
             </div>
-            <div class="form-text" id="editRoleDescription">This user will have access only to selected projects.</div>
+            <div class="form-text" id="editRoleDescription">Cet utilisateur aura acces uniquement aux projets selectionnes.</div>
           </div>
 
           <div id="editProjectAccessSection" class="mb-3">
-            <label class="form-label">Project Access <span class="text-danger">*</span></label>
+            <label class="form-label">Acces aux projets <span class="text-danger">*</span></label>
             <div class="border rounded p-3" style="max-height: 200px; overflow-y: auto;">
               {% for project in projects %}
                 <div class="form-check">
@@ -201,9 +208,9 @@
                 </div>
               {% endfor %}
             </div>
-            <div class="form-text">Select at least one project that this user can access.</div>
+            <div class="form-text">Selectionnez au moins un projet auquel cet utilisateur aura acces.</div>
             <div id="editProjectSelectionError" class="text-danger d-none" style="font-size: 0.875em;">
-              Please select at least one project.
+              Veuillez selectionner au moins un projet.
             </div>
           </div>
 
@@ -212,15 +219,43 @@
         <div class="modal-footer">
           <button type="button" class="btn btn-danger" id="editActiveBtn">
             <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
-            <span id="editActiveButtonText">Disable</span>
+            <span id="editActiveButtonText">Desactiver</span>
           </button>
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
           <button type="submit" class="btn btn-primary" id="editSubmitBtn">
             <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
-            Save Changes
+            Enregistrer
           </button>
         </div>
       </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de suppression d'utilisateur -->
+<div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteUserModalLabel">Supprimer l'utilisateur</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+      </div>
+      <form id="deleteUserForm" action="{% url 'projects:delete-user' project.object_id %}" method="post" class="d-none">
+        {% csrf_token %}
+        <input type="hidden" id="deleteUserObjectId" name="user_object_id" value="">
+      </form>
+      <div class="modal-body">
+        <p>Etes-vous sur de vouloir supprimer l'utilisateur <strong id="deleteUserEmail"></strong> ?</p>
+        <p class="text-danger"><i class="fas fa-exclamation-triangle me-1"></i>Cette action est irreversible.</p>
+        <div id="deleteError" class="alert alert-danger d-none" role="alert"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+          <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+          Supprimer
+        </button>
+      </div>
     </div>
   </div>
 </div>
@@ -243,16 +278,16 @@
     function updateRoleUI() {
         if (roleToggle.checked) {
             // Admin role selected
-            roleLabel.textContent = 'Administrator';
-            roleDescription.textContent = 'This user will be able to create projects, purchase credits, invite teammates and have access to all projects in your account.';
+            roleLabel.textContent = 'Administrateur';
+            roleDescription.textContent = 'Cet utilisateur pourra creer des projets, acheter des credits, inviter des coequipiers et acceder a tous les projets de votre compte.';
             projectAccessSection.style.display = 'none';
             projectSelectionError.classList.add('d-none');
             // Clear all project selections
             projectCheckboxes.forEach(checkbox => checkbox.checked = false);
         } else {
             // Regular user selected
-            roleLabel.textContent = 'Regular User';
-            roleDescription.textContent = 'This user will have access only to selected projects.';
+            roleLabel.textContent = 'Utilisateur standard';
+            roleDescription.textContent = 'Cet utilisateur aura acces uniquement aux projets selectionnes.';
             projectAccessSection.style.display = 'block';
         }
     }
@@ -371,10 +406,10 @@
         .catch(error => {
         setLoading(false);
         console.error('Error:', error);
-        showInlineError('An unexpected error occurred. Please try again.');
+        showInlineError('Une erreur inattendue s\'est produite. Veuillez reessayer.');
         });
     });
-    
+
     // Hide alerts when modal is opened
     document.getElementById('inviteUserModal').addEventListener('show.bs.modal', function() {
         successAlert.classList.add('d-none');
@@ -409,26 +444,26 @@
         function updateEditRoleUI() {
             if (editRoleToggle.checked) {
                 // Admin role selected
-                editRoleLabel.textContent = 'Administrator';
-                editRoleDescription.textContent = 'This user will be able to create projects, purchase credits, invite teammates and have access to all projects in your account.';
+                editRoleLabel.textContent = 'Administrateur';
+                editRoleDescription.textContent = 'Cet utilisateur pourra creer des projets, acheter des credits, inviter des coequipiers et acceder a tous les projets de votre compte.';
                 editProjectAccessSection.style.display = 'none';
                 editProjectSelectionError.classList.add('d-none');
                 // Clear all project selections
                 editProjectCheckboxes.forEach(checkbox => checkbox.checked = false);
             } else {
                 // Regular user selected
-                editRoleLabel.textContent = 'Regular User';
-                editRoleDescription.textContent = 'This user will have access only to selected projects.';
+                editRoleLabel.textContent = 'Utilisateur standard';
+                editRoleDescription.textContent = 'Cet utilisateur aura acces uniquement aux projets selectionnes.';
                 editProjectAccessSection.style.display = 'block';
             }
         }
         
         function updateActiveButton() {
             if (currentUserActive) {
-                editActiveButtonText.textContent = 'Disable';
+                editActiveButtonText.textContent = 'Desactiver';
                 editActiveBtn.className = 'btn btn-danger';
             } else {
-                editActiveButtonText.textContent = 'Activate';
+                editActiveButtonText.textContent = 'Activer';
                 editActiveBtn.className = 'btn btn-success';
             }
         }
@@ -534,7 +569,7 @@
             .catch(error => {
                 setActiveLoading(false);
                 console.error('Error:', error);
-                showEditInlineError('An unexpected error occurred. Please try again.');
+                showEditInlineError('Une erreur inattendue s\'est produite. Veuillez reessayer.');
             });
         });
         
@@ -628,10 +663,10 @@
             .catch(error => {
                 setEditLoading(false);
                 console.error('Error:', error);
-                showEditInlineError('An unexpected error occurred. Please try again.');
+                showEditInlineError('Une erreur inattendue s\'est produite. Veuillez reessayer.');
             });
         });
-        
+
         // Hide alerts when edit modal is opened
         document.getElementById('editUserModal').addEventListener('show.bs.modal', function() {
             successAlert.classList.add('d-none');
@@ -640,15 +675,93 @@
         });
     }
 
+    function initializeDeleteForm() {
+        const deleteForm = document.getElementById('deleteUserForm');
+        const deleteUserEmail = document.getElementById('deleteUserEmail');
+        const deleteUserObjectId = document.getElementById('deleteUserObjectId');
+        const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+        const deleteError = document.getElementById('deleteError');
+        const deleteModal = document.getElementById('deleteUserModal');
+
+        // Handle delete button clicks to populate modal
+        document.querySelectorAll('.delete-user-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const userEmail = this.dataset.userEmail;
+                const userObjectId = this.dataset.userObjectId;
+
+                deleteUserEmail.textContent = userEmail;
+                deleteUserObjectId.value = userObjectId;
+                deleteError.classList.add('d-none');
+            });
+        });
+
+        // Handle delete confirmation
+        confirmDeleteBtn.addEventListener('click', function() {
+            const spinner = confirmDeleteBtn.querySelector('.spinner-border');
+            deleteError.classList.add('d-none');
+
+            confirmDeleteBtn.disabled = true;
+            spinner.classList.remove('d-none');
+
+            const formData = new FormData(deleteForm);
+
+            fetch(deleteForm.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.text().then(text => ({ success: true, message: text }));
+                } else {
+                    return response.text().then(text => ({ success: false, message: text }));
+                }
+            })
+            .then(result => {
+                confirmDeleteBtn.disabled = false;
+                spinner.classList.add('d-none');
+
+                if (result.success) {
+                    // Close modal
+                    const modal = bootstrap.Modal.getInstance(deleteModal);
+                    modal.hide();
+
+                    // Reload page
+                    window.location.reload();
+                } else {
+                    // Show error
+                    deleteError.textContent = result.message;
+                    deleteError.classList.remove('d-none');
+                }
+            })
+            .catch(error => {
+                confirmDeleteBtn.disabled = false;
+                spinner.classList.add('d-none');
+                console.error('Error:', error);
+                deleteError.textContent = 'Une erreur inattendue s\'est produite. Veuillez reessayer.';
+                deleteError.classList.remove('d-none');
+            });
+        });
+
+        // Hide error when modal is opened
+        deleteModal.addEventListener('show.bs.modal', function() {
+            deleteError.classList.add('d-none');
+        });
+    }
+
     // Call when HTMX content is loaded
     document.addEventListener('htmx:afterSwap', function() {
         initializeInviteForm();
         initializeEditForm();
+        initializeDeleteForm();
     });
-    
+
     document.addEventListener('DOMContentLoaded', function() {
         initializeInviteForm();
         initializeEditForm();
+        initializeDeleteForm();
     });
 </script>
 

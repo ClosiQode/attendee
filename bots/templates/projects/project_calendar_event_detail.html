@@ -62,10 +62,10 @@
 
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="mb-0">Calendar Event Details</h2>
-        <a href="{% url 'bots:project-calendar-detail' project.object_id calendar.object_id %}" 
+        <h2 class="mb-0">Details de l'evenement</h2>
+        <a href="{% url 'bots:project-calendar-detail' project.object_id calendar.object_id %}"
            class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left"></i> Back to Calendar
+            <i class="bi bi-arrow-left"></i> Retour au calendrier
         </a>
     </div>
 
@@ -74,47 +74,47 @@
             <div class="event-info-card">
                 <div class="row">
                     <div class="col-md-6">
-                        <p><strong>Name:</strong> 
+                        <p><strong>Nom:</strong>
                             {% if calendar_event.name %}
                                 {{ calendar_event.name }}
                             {% else %}
-                                <em class="text-muted">Untitled Event</em>
+                                <em class="text-muted">Evenement sans titre</em>
                             {% endif %}
                             {% if calendar_event.is_deleted %}
-                                &nbsp;<span class="badge bg-danger">Deleted</span>
+                                &nbsp;<span class="badge bg-danger">Supprime</span>
                             {% endif %}
                         </p>
-                        <p><strong>ID:</strong> 
+                        <p><strong>ID:</strong>
                             <span class="truncated-field" title="{{ calendar_event.object_id }}">{{ calendar_event.object_id }}</span>
                         </p>
-                        <p><strong>Platform UUID:</strong> 
+                        <p><strong>UUID Plateforme:</strong>
                             <span class="truncated-field" title="{{ calendar_event.platform_uuid }}">{{ calendar_event.platform_uuid }}</span>
                         </p>
                         {% if calendar_event.ical_uid %}
-                            <p><strong>iCal UID:</strong> 
+                            <p><strong>iCal UID:</strong>
                                 <span class="truncated-field" title="{{ calendar_event.ical_uid }}">{{ calendar_event.ical_uid }}</span>
                             </p>
-                        {% endif %}                        
+                        {% endif %}
                         {% if calendar_event.attendees %}
-                        <p><strong>Attendees:</strong> 
-                            {% for attendee in calendar_event.attendees %}{% if attendee.displayName %}{{ attendee.displayName }}{% elif attendee.email %}{{ attendee.email }}{% else %}Unknown{% endif %}{% if not forloop.last %}, {% endif %}{% endfor %}
+                        <p><strong>Participants:</strong>
+                            {% for attendee in calendar_event.attendees %}{% if attendee.displayName %}{{ attendee.displayName }}{% elif attendee.email %}{{ attendee.email }}{% else %}Inconnu{% endif %}{% if not forloop.last %}, {% endif %}{% endfor %}
                         </p>
                         {% endif %}
                     </div>
                     <div class="col-md-6">
-                        <p><strong>Platform:</strong> {{ calendar.get_platform_display }} Calendar</p>
-                        <p><strong>Created:</strong> {{ calendar_event.created_at|date:"M d, Y H:i" }}</p>
-                        <p><strong>Updated:</strong> {{ calendar_event.updated_at|date:"M d, Y H:i" }}</p>
+                        <p><strong>Plateforme:</strong> {{ calendar.get_platform_display }} Calendrier</p>
+                        <p><strong>Cree le:</strong> {{ calendar_event.created_at|date:"M d, Y H:i" }}</p>
+                        <p><strong>Mis a jour le:</strong> {{ calendar_event.updated_at|date:"M d, Y H:i" }}</p>
                         {% if calendar_event.meeting_url %}
-                            <p><strong>Meeting URL:</strong> 
+                            <p><strong>URL de reunion:</strong>
                                 <a href="{{ calendar_event.meeting_url }}" target="_blank" class="text-decoration-none">
                                     {{ calendar_event.meeting_url|truncatechars:40 }}
                                     <i class="bi bi-box-arrow-up-right ms-1"></i>
                                 </a>
                             </p>
                         {% endif %}
-                        <p><strong>Start Time:</strong> {{ calendar_event.start_time|date:"M d, Y H:i" }}</p>
-                        <p><strong>End Time:</strong> {{ calendar_event.end_time|date:"M d, Y H:i" }}</p>
+                        <p><strong>Heure de debut:</strong> {{ calendar_event.start_time|date:"M d, Y H:i" }}</p>
+                        <p><strong>Heure de fin:</strong> {{ calendar_event.end_time|date:"M d, Y H:i" }}</p>
                     </div>
                 </div>
             </div>
@@ -127,7 +127,7 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <h6 class="mb-0">Associated Bots ({{ bots_for_event|length }})</h6>
+                    <h6 class="mb-0">Bots associes ({{ bots_for_event|length }})</h6>
                 </div>
                 <div class="card-body">
                     <div class="row">
@@ -158,7 +158,7 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <h6 class="mb-0">Raw Data from API</h6>
+                    <h6 class="mb-0">Donnees brutes de l'API</h6>
                 </div>
                 <div class="card-body">
                     <pre class="bg-light p-3 rounded" style="max-height: 400px; overflow-y: auto; font-size: 0.875rem; white-space: pre-wrap; word-wrap: break-word; overflow-wrap: break-word;">{{ calendar_event.raw|pprint }}</pre>
