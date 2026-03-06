@@ -2,9 +2,10 @@ import os
 
 from .base import *
 
-DEBUG = True
-SITE_DOMAIN = "localhost:8000"
-ALLOWED_HOSTS = ["tendee-stripe-hooks.ngrok.io", "localhost"]
+DEBUG = os.getenv("DJANGO_DEBUG", "true").lower() == "true"
+SITE_DOMAIN = os.getenv("SITE_DOMAIN", "localhost:8000")
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost").split(",")
+CSRF_TRUSTED_ORIGINS = os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",") if os.getenv("CSRF_TRUSTED_ORIGINS") else []
 
 DATABASES = {
     "default": {
