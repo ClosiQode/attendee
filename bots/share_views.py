@@ -3,6 +3,7 @@ import logging
 from django.conf import settings
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404, render
+from django.views import View as DjangoView
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.permissions import AllowAny
@@ -89,9 +90,8 @@ class DeleteSharedLinkView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class SharedRecordingPageView(APIView):
-    permission_classes = [AllowAny]
-    authentication_classes = []
+class SharedRecordingPageView(DjangoView):
+    """Pure Django view (not DRF) to avoid content negotiation issues with HTML rendering."""
 
     def get(self, request, token):
         shared_link = SharedRecordingLink.objects.filter(token=token).first()
@@ -123,7 +123,9 @@ class SharedRecordingPageView(APIView):
 
     def _get_video_url(self, recording, request):
         if settings.STORAGE_PROTOCOL == "local":
-            return request.build_absolute_uri(f"/share/{recording.shared_links.filter(is_active=True).first().token}/stream/")
+            active_link = recording.shared_links.filter(is_active=True).first()
+            if active_link:
+                return request.build_absolute_uri(f"/share/{active_link.token}/stream/")
         return recording.url
 
     def _get_client_ip(self, request):

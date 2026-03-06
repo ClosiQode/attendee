@@ -93,10 +93,10 @@
                                                             {% if link.expires_at %} — expire le {{ link.expires_at|date:"d/m/Y H:i" }}{% else %} — sans expiration{% endif %}
                                                             — {{ link.access_count }} vue{% if link.access_count != 1 %}s{% endif %}
                                                         </small>
-                                                        {% if not link.is_valid %}
-                                                            <span class="badge bg-secondary ms-1">expire</span>
-                                                        {% elif not link.is_active %}
+                                                        {% if not link.is_active %}
                                                             <span class="badge bg-secondary ms-1">desactive</span>
+                                                        {% elif link.is_expired %}
+                                                            <span class="badge bg-secondary ms-1">expire</span>
                                                         {% endif %}
                                                     </div>
                                                     <div>
