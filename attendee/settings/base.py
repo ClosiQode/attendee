@@ -242,6 +242,8 @@ LOG_FORMATTERS = {
 STORAGE_PROTOCOL = os.getenv("STORAGE_PROTOCOL", "s3")
 AWS_RECORDING_STORAGE_BUCKET_NAME = os.getenv("AWS_RECORDING_STORAGE_BUCKET_NAME")
 AZURE_RECORDING_STORAGE_CONTAINER_NAME = os.getenv("AZURE_RECORDING_STORAGE_CONTAINER_NAME")
+LOCAL_RECORDING_STORAGE_PATH = os.getenv("LOCAL_RECORDING_STORAGE_PATH", "/recordings")
+LOCAL_AUDIO_CHUNK_STORAGE_PATH = os.getenv("LOCAL_AUDIO_CHUNK_STORAGE_PATH", "/audio_chunks")
 
 # Audio chunk storage settings
 USE_REMOTE_STORAGE_FOR_AUDIO_CHUNKS = os.getenv("USE_REMOTE_STORAGE_FOR_AUDIO_CHUNKS", "false") == "true"
@@ -264,6 +266,27 @@ if STORAGE_PROTOCOL == "azure":
 
     AUDIO_CHUNK_STORAGE_BACKEND = copy.deepcopy(DEFAULT_STORAGE_BACKEND)
     AUDIO_CHUNK_STORAGE_BACKEND["OPTIONS"]["azure_container"] = AZURE_AUDIO_CHUNK_STORAGE_CONTAINER_NAME
+elif STORAGE_PROTOCOL == "local":
+    DEFAULT_STORAGE_BACKEND = {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "OPTIONS": {
+            "location": LOCAL_RECORDING_STORAGE_PATH,
+        },
+    }
+
+    RECORDING_STORAGE_BACKEND = {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "OPTIONS": {
+            "location": LOCAL_RECORDING_STORAGE_PATH,
+        },
+    }
+
+    AUDIO_CHUNK_STORAGE_BACKEND = {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "OPTIONS": {
+            "location": LOCAL_AUDIO_CHUNK_STORAGE_PATH,
+        },
+    }
 else:
     DEFAULT_STORAGE_BACKEND = {
         "BACKEND": "storages.backends.s3.S3Storage",

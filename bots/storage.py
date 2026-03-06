@@ -72,6 +72,9 @@ def remote_storage_url(file_field):
     if settings.STORAGE_PROTOCOL == "azure":
         return file_field.url
 
+    elif settings.STORAGE_PROTOCOL == "local":
+        return file_field.url
+
     # Generate a temporary signed URL that expires in 30 minutes (1800 seconds)
     return file_field.storage.bucket.meta.client.generate_presigned_url(
         "get_object",

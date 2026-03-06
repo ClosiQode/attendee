@@ -29,6 +29,7 @@ from drf_spectacular.views import (
 )
 
 from accounts import views
+from bots.share_urls import api_urlpatterns as share_api_urlpatterns, public_urlpatterns as share_public_urlpatterns
 
 
 def health_check_view(request):
@@ -68,7 +69,10 @@ urlpatterns += [
     path("api/v1/", include("bots.zoom_oauth_connections_api_urls")),
     path("api/v1/", include("bots.app_session_api_urls")),
     path("api/v1/", include("bots.bots_api_urls")),
+    path("api/v1/", include((share_api_urlpatterns, "share"))),
 ]
+
+urlpatterns += share_public_urlpatterns
 
 if settings.DEBUG:
     # API docs routes - only available in development

@@ -20,6 +20,11 @@ def main():
     print("AWS_ACCESS_KEY_ID=")
     print("AWS_SECRET_ACCESS_KEY=")
     print("AWS_DEFAULT_REGION=us-east-1")
+    print("BOT_SOFT_TIME_LIMIT_SECONDS=14400")
+    print("# Storage settings (uncomment for local storage)")
+    print("# STORAGE_PROTOCOL=local")
+    print("# LOCAL_RECORDING_STORAGE_PATH=/recordings")
+    print("# LOCAL_AUDIO_CHUNK_STORAGE_PATH=/audio_chunks")
 
 
 if __name__ == "__main__":

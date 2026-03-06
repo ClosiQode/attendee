@@ -2099,6 +2099,9 @@ class Recording(models.Model):
         if settings.STORAGE_PROTOCOL == "azure":
             return self.file.url
 
+        elif settings.STORAGE_PROTOCOL == "local":
+            return self.file.url
+
         # Generate a temporary signed URL that expires in 30 minutes (1800 seconds)
         return self.file.storage.bucket.meta.client.generate_presigned_url(
             "get_object",
@@ -2827,6 +2830,9 @@ class BotDebugScreenshot(models.Model):
         if settings.STORAGE_PROTOCOL == "azure":
             return self.file.url
 
+        elif settings.STORAGE_PROTOCOL == "local":
+            return self.file.url
+
         # Generate a temporary signed URL that expires in 30 minutes (1800 seconds)
         return self.file.storage.bucket.meta.client.generate_presigned_url(
             "get_object",
@@ -2997,3 +3003,50 @@ class BotResourceSnapshot(models.Model):
 
     def __str__(self):
         return f"Resource snapshot for {self.bot.object_id} at {self.created_at}"
+
+
+class SharedRecordingLink(models.Model):
+    OBJECT_ID_PREFIX = "srl_"
+    object_id = models.CharField(max_length=32, unique=True, editable=False)
+    recording = models.ForeignKey(Recording, on_delete=models.CASCADE, related_name="shared_links")
+    token = models.CharField(max_length=64, unique=True, editable=False)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    access_count = models.IntegerField(default=0)
+    allow_download = models.BooleanField(default=True)
+
+    def save(self, *args, **kwargs):
+        if not self.object_id:
+            random_string = "".join(secrets.choice(string.ascii_letters + string.digits) for _ in range(16))
+            self.object_id = f"{self.OBJECT_ID_PREFIX}{random_string}"
+        if not self.token:
+            self.token = secrets.token_urlsafe(32)
+        super().save(*args, **kwargs)
+
+    @property
+    def is_expired(self):
+        if self.expires_at is None:
+            return False
+        return timezone.now() > self.expires_at
+
+    @property
+    def is_valid(self):
+        return self.is_active and not self.is_expired
+
+    def __str__(self):
+        return f"SharedLink {self.object_id} for {self.recording}"
+
+
+class SharedRecordingAccess(models.Model):
+    shared_link = models.ForeignKey(SharedRecordingLink, on_delete=models.CASCADE, related_name="accesses")
+    accessed_at = models.DateTimeField(auto_now_add=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-accessed_at"]
+
+    def __str__(self):
+        return f"Access to {self.shared_link.object_id} at {self.accessed_at}"

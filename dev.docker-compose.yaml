@@ -3,6 +3,8 @@ services:
     build: ./
     volumes:
      - .:/attendee
+     - recordings:/recordings
+     - audio_chunks:/audio_chunks
     networks:
       - attendee_network
     environment:
@@ -16,6 +18,8 @@ services:
     build: ./
     volumes:
      - .:/attendee
+     - recordings:/recordings
+     - audio_chunks:/audio_chunks
     networks:
       - attendee_network
     environment:
@@ -29,6 +33,8 @@ services:
     build: ./
     volumes:
      - .:/attendee
+     - recordings:/recordings
+     - audio_chunks:/audio_chunks
     networks:
       - attendee_network
     ports:
@@ -87,3 +93,5 @@ networks:
 volumes:
   postgres:
   redis:
+  recordings:
+  audio_chunks:
