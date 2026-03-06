@@ -292,30 +292,86 @@
     });
 
     // Share link functions
+    const shareCreateUrl = '{% if bot %}/projects/{{ bot.project.object_id }}/bots/{{ bot.object_id }}/share{% endif %}';
+    const shareDeleteBaseUrl = '{% if bot %}/projects/{{ bot.project.object_id }}/bots/{{ bot.object_id }}/share/{% endif %}';
+
+    function getCSRF() {
+        return document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
+               document.cookie.split(';').find(c => c.trim().startsWith('csrftoken='))?.split('=')[1];
+    }
+
     function createShareLink() {
         const expiry = document.getElementById('shareExpiry').value;
         const allowDownload = document.getElementById('shareAllowDownload').checked;
         const title = document.getElementById('shareTitle').value;
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
-                          document.cookie.split(';').find(c => c.trim().startsWith('csrftoken='))?.split('=')[1];
+        const btn = event.target.closest('button');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Creation...';
 
         const formData = new FormData();
         if (expiry) formData.append('expires_in_hours', expiry);
         formData.append('allow_download', allowDownload ? 'true' : 'false');
         if (title) formData.append('title', title);
 
-        const shareBaseUrl = '{% if bot %}{% url "bots:project-bot-create-share-link" bot.project.object_id bot.object_id %}{% endif %}';
-        fetch(shareBaseUrl, {
+        fetch(shareCreateUrl, {
             method: 'POST',
-            headers: {'X-CSRFToken': csrfToken},
+            headers: {'X-CSRFToken': getCSRF()},
             body: formData
         })
-        .then(r => r.json())
+        .then(r => {
+            if (!r.ok) throw new Error('Erreur ' + r.status);
+            return r.json();
+        })
         .then(data => {
+            btn.disabled = false;
+            btn.textContent = 'Creer le lien';
+
+            // Show the created link URL
             document.getElementById('shareLinkUrl').value = data.share_url;
             document.getElementById('shareLinkResult').style.display = 'block';
+
+            // Add the new link to the existing links list dynamically
+            let linksContainer = document.getElementById('existingShareLinks');
+            if (!linksContainer) {
+                // Create the "Liens existants" section if it doesn't exist yet
+                const panel = document.querySelector('#sharePanel .card-body');
+                const hr = document.createElement('hr');
+                hr.className = 'my-3';
+                panel.appendChild(hr);
+                const h6 = document.createElement('h6');
+                h6.className = 'mb-2';
+                h6.textContent = 'Liens existants';
+                panel.appendChild(h6);
+                linksContainer = document.createElement('div');
+                linksContainer.className = 'list-group list-group-flush';
+                linksContainer.id = 'existingShareLinks';
+                panel.appendChild(linksContainer);
+            }
+
+            const expiresText = data.expires_at
+                ? ' — expire le ' + new Date(data.expires_at).toLocaleString('fr-FR', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'})
+                : ' — sans expiration';
+            const now = new Date().toLocaleString('fr-FR', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'});
+
+            const newItem = document.createElement('div');
+            newItem.className = 'list-group-item px-0 d-flex justify-content-between align-items-center';
+            newItem.id = 'share-link-' + data.token;
+            newItem.innerHTML = `
+                <div><small class="text-muted">${now}${expiresText} — 0 vue</small></div>
+                <div>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="copyExistingLink('${data.token}')"><i class="bi bi-clipboard"></i></button>
+                    <button class="btn btn-outline-danger btn-sm" onclick="deleteShareLink('${data.token}')"><i class="bi bi-trash"></i></button>
+                </div>`;
+            linksContainer.prepend(newItem);
+
+            // Reset form
+            document.getElementById('shareTitle').value = '';
         })
-        .catch(err => alert('Erreur lors de la creation du lien'));
+        .catch(err => {
+            btn.disabled = false;
+            btn.textContent = 'Creer le lien';
+            alert('Erreur lors de la creation du lien : ' + err.message);
+        });
     }
 
     function copyShareLink() {
@@ -340,31 +396,32 @@
 
     function deleteShareLink(token) {
         if (!confirm('Desactiver ce lien de partage ?')) return;
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
-                          document.cookie.split(';').find(c => c.trim().startsWith('csrftoken='))?.split('=')[1];
 
-        const deleteUrl = '{% if bot %}{% url "bots:project-bot-create-share-link" bot.project.object_id bot.object_id %}{% endif %}/' + token + '/delete';
-        fetch(deleteUrl, {
+        fetch(shareDeleteBaseUrl + token + '/delete', {
             method: 'POST',
-            headers: {'X-CSRFToken': csrfToken}
+            headers: {'X-CSRFToken': getCSRF()}
         })
-        .then(r => r.json())
+        .then(r => {
+            if (!r.ok) throw new Error('Erreur ' + r.status);
+            return r.json();
+        })
         .then(() => {
             const el = document.getElementById('share-link-' + token);
-            if (el) el.style.opacity = '0.5';
-            el.querySelector('div:last-child').innerHTML = '<span class="badge bg-secondary">desactive</span>';
-        });
+            if (el) {
+                el.style.opacity = '0.5';
+                el.querySelector('div:last-child').innerHTML = '<span class="badge bg-secondary">desactive</span>';
+            }
+        })
+        .catch(err => alert('Erreur lors de la desactivation'));
     }
 
     function deleteRecording() {
         if (!confirm('Supprimer definitivement cette video ? Cette action est irreversible.')) return;
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
-                          document.cookie.split(';').find(c => c.trim().startsWith('csrftoken='))?.split('=')[1];
         const deleteUrl = document.querySelector('.share-section').dataset.deleteUrl;
 
         fetch(deleteUrl, {
             method: 'POST',
-            headers: {'X-CSRFToken': csrfToken}
+            headers: {'X-CSRFToken': getCSRF()}
         })
         .then(r => r.json())
         .then(data => {
