@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Recording - {{ bot.bot_name|default:"Meeting Recording" }}</title>
+    <title>Recording - {{ bot.bot_name|default:"Enregistrement de reunion" }}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f0f0f; color: #fff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
@@ -28,27 +28,26 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>{{ bot.bot_name|default:"Meeting Recording" }}</h1>
-            <p>Shared on {{ shared_link.created_at|date:"M d, Y" }}</p>
+            <h1>{{ bot.bot_name|default:"Enregistrement de reunion" }}</h1>
+            <p>Partage le {{ shared_link.created_at|date:"M d, Y" }}</p>
         </div>
 
         <div class="video-wrapper">
             <video controls preload="metadata">
                 <source src="{{ video_url }}" type="video/mp4">
-                Your browser does not support the video tag.
+                Votre navigateur ne supporte pas la lecture video.
             </video>
         </div>
 
         {% if shared_link.allow_download %}
         <div class="actions">
             <a href="{% url 'shared_recording_download' token=shared_link.token %}" class="btn btn-primary">
-                Download Recording
+                Telecharger l'enregistrement
             </a>
         </div>
         {% endif %}
 
         <div class="footer">
-            <p>Powered by Attendee</p>
         </div>
     </div>
 </body>

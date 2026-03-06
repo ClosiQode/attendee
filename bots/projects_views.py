@@ -969,6 +969,33 @@ class ProjectBotDeleteShareLinkView(LoginRequiredMixin, ProjectUrlContextMixin, 
         return JsonResponse({"status": "ok"})
 
 
+class ProjectBotDeleteRecordingView(LoginRequiredMixin, ProjectUrlContextMixin, View):
+    def post(self, request, object_id, bot_object_id):
+        project = get_project_for_user(user=request.user, project_object_id=object_id)
+        bot = get_object_or_404(Bot, object_id=bot_object_id, project=project)
+        recording = Recording.objects.filter(bot=bot, is_default_recording=True).first()
+        if not recording:
+            recording = bot.recordings.first()
+        if not recording:
+            return JsonResponse({"error": "Aucun enregistrement trouve"}, status=404)
+
+        # Delete the file
+        if recording.file and recording.file.name:
+            try:
+                recording.file.delete(save=False)
+            except Exception as e:
+                logger.error(f"Error deleting recording file: {e}")
+
+        # Delete associated share links
+        from bots.models import SharedRecordingLink
+        SharedRecordingLink.objects.filter(recording=recording).delete()
+
+        # Delete the recording object
+        recording.delete()
+
+        return JsonResponse({"status": "ok"})
+
+
 class ProjectWebhooksView(LoginRequiredMixin, ProjectUrlContextMixin, View):
     def get(self, request, object_id):
         project = get_project_for_user(user=request.user, project_object_id=object_id)

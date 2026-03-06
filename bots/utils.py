@@ -577,6 +577,19 @@ def generate_speaker_timeline_for_bot_detail_view(recording):
     return result
 
 
+def format_file_size(size_bytes):
+    if not size_bytes:
+        return None
+    if size_bytes < 1024:
+        return f"{size_bytes} B"
+    elif size_bytes < 1024 * 1024:
+        return f"{size_bytes / 1024:.1f} Ko"
+    elif size_bytes < 1024 * 1024 * 1024:
+        return f"{size_bytes / (1024 * 1024):.1f} Mo"
+    else:
+        return f"{size_bytes / (1024 * 1024 * 1024):.1f} Go"
+
+
 def generate_recordings_json_for_bot_detail_view(bot):
     # Process recordings and utterances
     recordings_data = []
@@ -591,12 +604,17 @@ def generate_recordings_json_for_bot_detail_view(bot):
         }
         async_transcriptions = generate_async_transcriptions_json_for_bot_detail_view(recording)
         speaker_timeline = generate_speaker_timeline_for_bot_detail_view(recording)
+        try:
+            file_size = recording.file.size if recording.file and recording.file.name else None
+        except Exception:
+            file_size = None
         recordings_data.append(
             {
                 "state": recording.state,
                 "recording_type": recording.bot.recording_type(),
                 "url": recording.url,
                 "is_default_recording": recording.is_default_recording,
+                "file_size": format_file_size(file_size),
                 "transcriptions": [
                     realtime_transcription,
                     *async_transcriptions,
