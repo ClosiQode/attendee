@@ -980,19 +980,20 @@ class ProjectBotDeleteRecordingView(LoginRequiredMixin, ProjectUrlContextMixin, 
         if not recording:
             return JsonResponse({"error": "Aucun enregistrement trouve"}, status=404)
 
-        # Delete the file
+        # Delete only the video file, keep the recording object and transcriptions
         if recording.file and recording.file.name:
             try:
                 recording.file.delete(save=False)
             except Exception as e:
                 logger.error(f"Error deleting recording file: {e}")
 
-        # Delete associated share links
+        # Clear the file field
+        recording.file = None
+        recording.save(update_fields=["file"])
+
+        # Delete associated share links (no video to share anymore)
         from bots.models import SharedRecordingLink
         SharedRecordingLink.objects.filter(recording=recording).delete()
-
-        # Delete the recording object
-        recording.delete()
 
         return JsonResponse({"status": "ok"})
 
