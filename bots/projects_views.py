@@ -934,6 +934,7 @@ class ProjectBotCreateShareLinkView(LoginRequiredMixin, ProjectUrlContextMixin, 
 
         expires_in_hours = request.POST.get("expires_in_hours")
         allow_download = request.POST.get("allow_download", "true") == "true"
+        title = request.POST.get("title", "")
 
         expires_at = None
         if expires_in_hours:
@@ -944,6 +945,7 @@ class ProjectBotCreateShareLinkView(LoginRequiredMixin, ProjectUrlContextMixin, 
             created_by=request.user,
             expires_at=expires_at,
             allow_download=allow_download,
+            title=title,
         )
 
         return JsonResponse({

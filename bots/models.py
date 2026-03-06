@@ -3016,6 +3016,7 @@ class SharedRecordingLink(models.Model):
     is_active = models.BooleanField(default=True)
     access_count = models.IntegerField(default=0)
     allow_download = models.BooleanField(default=True)
+    title = models.CharField(max_length=255, blank=True, default="")
 
     def save(self, *args, **kwargs):
         if not self.object_id:

@@ -51,6 +51,10 @@
                                         <div class="card card-body">
                                             <h6 class="mb-3">Creer un lien de partage</h6>
                                             <div class="mb-2">
+                                                <label class="form-label small">Titre (optionnel)</label>
+                                                <input type="text" class="form-control form-control-sm" id="shareTitle" placeholder="Ex: Reunion du 6 mars">
+                                            </div>
+                                            <div class="mb-2">
                                                 <label class="form-label small">Expiration</label>
                                                 <select class="form-select form-select-sm" id="shareExpiry">
                                                     <option value="">Jamais</option>
@@ -291,12 +295,14 @@
     function createShareLink() {
         const expiry = document.getElementById('shareExpiry').value;
         const allowDownload = document.getElementById('shareAllowDownload').checked;
+        const title = document.getElementById('shareTitle').value;
         const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
                           document.cookie.split(';').find(c => c.trim().startsWith('csrftoken='))?.split('=')[1];
 
         const formData = new FormData();
         if (expiry) formData.append('expires_in_hours', expiry);
         formData.append('allow_download', allowDownload ? 'true' : 'false');
+        if (title) formData.append('title', title);
 
         const shareBaseUrl = '{% if bot %}{% url "bots:project-bot-create-share-link" bot.project.object_id bot.object_id %}{% endif %}';
         fetch(shareBaseUrl, {
@@ -337,7 +343,7 @@
         const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
                           document.cookie.split(';').find(c => c.trim().startsWith('csrftoken='))?.split('=')[1];
 
-        const deleteUrl = '{% if bot %}{% url "bots:project-bot-create-share-link" bot.project.object_id bot.object_id %}{% endif %}' + token + '/delete';
+        const deleteUrl = '{% if bot %}{% url "bots:project-bot-create-share-link" bot.project.object_id bot.object_id %}{% endif %}/' + token + '/delete';
         fetch(deleteUrl, {
             method: 'POST',
             headers: {'X-CSRFToken': csrfToken}

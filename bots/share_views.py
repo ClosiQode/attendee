@@ -27,6 +27,7 @@ class CreateSharedLinkView(APIView):
 
         expires_in_hours = request.data.get("expires_in_hours")
         allow_download = request.data.get("allow_download", True)
+        title = request.data.get("title", "")
 
         expires_at = None
         if expires_in_hours is not None:
@@ -37,6 +38,7 @@ class CreateSharedLinkView(APIView):
             created_by=request.user if request.user.is_authenticated else None,
             expires_at=expires_at,
             allow_download=allow_download,
+            title=title,
         )
 
         return Response({
