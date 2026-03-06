@@ -1,5 +1,5 @@
 {% load bot_filters %}
-
+{% csrf_token %}
 {% if recordings %}
     {% for recording in recordings %}
         <div class="recording-item">
@@ -33,6 +33,78 @@
                                     Your browser does not support the video tag.
                                 </video>
                                 {% include 'projects/partials/project_bot_recording_speaker_timeline.html' with speaker_timeline=recording.speaker_timeline %}
+                                <!-- Share button -->
+                                {% if recording.is_default_recording %}
+                                <div class="share-section mt-3">
+                                    <button class="btn btn-outline-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#sharePanel" aria-expanded="false">
+                                        <i class="bi bi-share"></i> Share
+                                    </button>
+                                    <div class="collapse mt-2" id="sharePanel">
+                                        <div class="card card-body">
+                                            <h6 class="mb-3">Create a share link</h6>
+                                            <div class="mb-2">
+                                                <label class="form-label small">Expiration</label>
+                                                <select class="form-select form-select-sm" id="shareExpiry">
+                                                    <option value="">Never expires</option>
+                                                    <option value="24">24 hours</option>
+                                                    <option value="48" selected>48 hours</option>
+                                                    <option value="168">7 days</option>
+                                                    <option value="720">30 days</option>
+                                                </select>
+                                            </div>
+                                            <div class="mb-3 form-check">
+                                                <input type="checkbox" class="form-check-input" id="shareAllowDownload" checked>
+                                                <label class="form-check-label small" for="shareAllowDownload">Allow download</label>
+                                            </div>
+                                            <button class="btn btn-primary btn-sm" onclick="createShareLink()">
+                                                Create link
+                                            </button>
+                                            <div id="shareLinkResult" class="mt-2" style="display:none;">
+                                                <div class="input-group input-group-sm">
+                                                    <input type="text" class="form-control" id="shareLinkUrl" readonly>
+                                                    <button class="btn btn-outline-secondary" onclick="copyShareLink()">
+                                                        <i class="bi bi-clipboard"></i>
+                                                    </button>
+                                                </div>
+                                                <small class="text-success mt-1 d-block" id="shareCopyFeedback" style="display:none!important;"></small>
+                                            </div>
+
+                                            {% if shared_links %}
+                                            <hr class="my-3">
+                                            <h6 class="mb-2">Existing links</h6>
+                                            <div class="list-group list-group-flush" id="existingShareLinks">
+                                                {% for link in shared_links %}
+                                                <div class="list-group-item px-0 d-flex justify-content-between align-items-center" id="share-link-{{ link.token }}">
+                                                    <div>
+                                                        <small class="text-muted">
+                                                            {{ link.created_at|date:"d/m/Y H:i" }}
+                                                            {% if link.expires_at %} — expires {{ link.expires_at|date:"d/m/Y H:i" }}{% else %} — never expires{% endif %}
+                                                            — {{ link.access_count }} view{{ link.access_count|pluralize }}
+                                                        </small>
+                                                        {% if not link.is_valid %}
+                                                            <span class="badge bg-secondary ms-1">expired</span>
+                                                        {% elif not link.is_active %}
+                                                            <span class="badge bg-secondary ms-1">disabled</span>
+                                                        {% endif %}
+                                                    </div>
+                                                    <div>
+                                                        {% if link.is_active and link.is_valid %}
+                                                        <button class="btn btn-outline-secondary btn-sm" onclick="copyExistingLink('{{ link.token }}')">
+                                                            <i class="bi bi-clipboard"></i>
+                                                        </button>
+                                                        <button class="btn btn-outline-danger btn-sm" onclick="deleteShareLink('{{ link.token }}')">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                                {% endfor %}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
                             {% else %}
                                 <div class="d-flex align-items-center justify-content-center bg-light border rounded" style="height: 300px;">
                                     <div class="text-center">
@@ -206,4 +278,67 @@
             }
         });
     });
+
+    // Share link functions
+    function createShareLink() {
+        const expiry = document.getElementById('shareExpiry').value;
+        const allowDownload = document.getElementById('shareAllowDownload').checked;
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
+                          document.cookie.split(';').find(c => c.trim().startsWith('csrftoken='))?.split('=')[1];
+
+        const formData = new FormData();
+        if (expiry) formData.append('expires_in_hours', expiry);
+        formData.append('allow_download', allowDownload ? 'true' : 'false');
+
+        const shareBaseUrl = '{% if bot %}{% url "bots:project-bot-create-share-link" bot.project.object_id bot.object_id %}{% endif %}';
+        fetch(shareBaseUrl, {
+            method: 'POST',
+            headers: {'X-CSRFToken': csrfToken},
+            body: formData
+        })
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById('shareLinkUrl').value = data.share_url;
+            document.getElementById('shareLinkResult').style.display = 'block';
+        })
+        .catch(err => alert('Error creating share link'));
+    }
+
+    function copyShareLink() {
+        const url = document.getElementById('shareLinkUrl').value;
+        navigator.clipboard.writeText(url).then(() => {
+            const feedback = document.getElementById('shareCopyFeedback');
+            feedback.textContent = 'Copied!';
+            feedback.style.setProperty('display', 'block', 'important');
+            setTimeout(() => feedback.style.setProperty('display', 'none', 'important'), 2000);
+        });
+    }
+
+    function copyExistingLink(token) {
+        const url = window.location.origin + '/share/' + token + '/';
+        navigator.clipboard.writeText(url).then(() => {
+            const btn = event.target.closest('button');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-check"></i>';
+            setTimeout(() => btn.innerHTML = originalHtml, 1500);
+        });
+    }
+
+    function deleteShareLink(token) {
+        if (!confirm('Disable this share link?')) return;
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
+                          document.cookie.split(';').find(c => c.trim().startsWith('csrftoken='))?.split('=')[1];
+
+        const deleteUrl = '{% if bot %}{% url "bots:project-bot-create-share-link" bot.project.object_id bot.object_id %}{% endif %}' + token + '/delete';
+        fetch(deleteUrl, {
+            method: 'POST',
+            headers: {'X-CSRFToken': csrfToken}
+        })
+        .then(r => r.json())
+        .then(() => {
+            const el = document.getElementById('share-link-' + token);
+            if (el) el.style.opacity = '0.5';
+            el.querySelector('div:last-child').innerHTML = '<span class="badge bg-secondary">disabled</span>';
+        });
+    }
 </script>

@@ -47,6 +47,16 @@ urlpatterns = [
         name="project-bot-recordings",
     ),
     path(
+        "<str:object_id>/bots/<str:bot_object_id>/share",
+        projects_views.ProjectBotCreateShareLinkView.as_view(),
+        name="project-bot-create-share-link",
+    ),
+    path(
+        "<str:object_id>/bots/<str:bot_object_id>/share/<str:token>/delete",
+        projects_views.ProjectBotDeleteShareLinkView.as_view(),
+        name="project-bot-delete-share-link",
+    ),
+    path(
         "<str:object_id>/credentials",
         projects_views.ProjectCredentialsView.as_view(),
         name="project-credentials",

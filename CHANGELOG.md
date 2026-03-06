@@ -14,6 +14,8 @@ Format base sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
 - Page de visualisation HTML5 pour les videos partagees
 - Endpoints API pour creer, lister et desactiver les liens de partage
 - Support du telechargement et du streaming pour le stockage local
+- Bouton "Share" dans l'interface web (onglet Recordings) pour creer et gerer les liens de partage
+- Option "Never expires" pour les liens de partage qui n'expirent jamais
 - Route Django pour servir les fichiers locaux (recordings et audio chunks) avec authentification
 - Configuration SMTP email configurable via `.env` (`EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USE_TLS`, etc.)
 - Variable `DISABLE_SIGNUP` pour desactiver les inscriptions publiques

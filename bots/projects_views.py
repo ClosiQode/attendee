@@ -10,9 +10,10 @@ from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import models, transaction
-from django.http import HttpResponse, QueryDict
+from django.http import HttpResponse, JsonResponse, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.views import View
 from django.views.generic import ListView
 
@@ -899,14 +900,73 @@ class ProjectBotRecordingsView(LoginRequiredMixin, ProjectUrlContextMixin, View)
             # Redirect to bots list if bot not found
             return redirect("bots:project-bots", object_id=object_id)
 
+        # Get existing share links for this bot's default recording
+        shared_links = []
+        default_recording = bot.recordings.filter(is_default_recording=True).first()
+        if default_recording:
+            from bots.models import SharedRecordingLink
+            shared_links = list(
+                SharedRecordingLink.objects.filter(recording=default_recording)
+                .order_by("-created_at")
+            )
+
         context = {
             "RecordingStates": RecordingStates,
             "RecordingTypes": RecordingTypes,
             "RecordingTranscriptionStates": RecordingTranscriptionStates,
             "recordings": generate_recordings_json_for_bot_detail_view(bot),
+            "bot": bot,
+            "shared_links": shared_links,
         }
 
         return render(request, "projects/partials/project_bot_recordings.html", context)
+
+
+class ProjectBotCreateShareLinkView(LoginRequiredMixin, ProjectUrlContextMixin, View):
+    def post(self, request, object_id, bot_object_id):
+        project = get_project_for_user(user=request.user, project_object_id=object_id)
+        bot = get_object_or_404(Bot, object_id=bot_object_id, project=project)
+        recording = Recording.objects.filter(bot=bot, is_default_recording=True).first()
+        if not recording or not recording.file or not recording.file.name:
+            return JsonResponse({"error": "No recording found"}, status=404)
+
+        from bots.models import SharedRecordingLink
+
+        expires_in_hours = request.POST.get("expires_in_hours")
+        allow_download = request.POST.get("allow_download", "true") == "true"
+
+        expires_at = None
+        if expires_in_hours:
+            expires_at = timezone.now() + timezone.timedelta(hours=int(expires_in_hours))
+
+        shared_link = SharedRecordingLink.objects.create(
+            recording=recording,
+            created_by=request.user,
+            expires_at=expires_at,
+            allow_download=allow_download,
+        )
+
+        return JsonResponse({
+            "token": shared_link.token,
+            "share_url": request.build_absolute_uri(f"/share/{shared_link.token}/"),
+            "expires_at": shared_link.expires_at.isoformat() if shared_link.expires_at else None,
+            "allow_download": shared_link.allow_download,
+        })
+
+
+class ProjectBotDeleteShareLinkView(LoginRequiredMixin, ProjectUrlContextMixin, View):
+    def post(self, request, object_id, bot_object_id, token):
+        project = get_project_for_user(user=request.user, project_object_id=object_id)
+        bot = get_object_or_404(Bot, object_id=bot_object_id, project=project)
+        recording = Recording.objects.filter(bot=bot, is_default_recording=True).first()
+        if not recording:
+            return JsonResponse({"error": "No recording found"}, status=404)
+
+        from bots.models import SharedRecordingLink
+        shared_link = get_object_or_404(SharedRecordingLink, recording=recording, token=token)
+        shared_link.is_active = False
+        shared_link.save()
+        return JsonResponse({"status": "ok"})
 
 
 class ProjectWebhooksView(LoginRequiredMixin, ProjectUrlContextMixin, View):
