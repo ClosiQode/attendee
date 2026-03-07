@@ -221,6 +221,11 @@ urlpatterns = [
         projects_views.ProjectBotAISummaryView.as_view(),
         name="project-bot-ai-summary",
     ),
+    path(
+        "<str:object_id>/bots/<str:bot_object_id>/generate-ai-summary",
+        projects_views.ProjectBotGenerateAISummaryView.as_view(),
+        name="project-bot-generate-ai-summary",
+    ),
     # Don't put anything after this, it will redirect to the dashboard
     path(
         "<str:object_id>/",

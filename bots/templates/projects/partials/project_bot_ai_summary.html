@@ -1,8 +1,15 @@
-<div class="p-3">
+<div class="p-3" id="ai-summary-container">
     {% if recording and recording.ai_summary_status == 2 %}
         <div class="card">
-            <div class="card-header">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <h6 class="mb-0">Synthèse IA</h6>
+                <button class="btn btn-sm btn-outline-secondary"
+                        hx-post="{% url 'projects:project-bot-generate-ai-summary' project.object_id bot.object_id %}"
+                        hx-target="#ai-summary-container"
+                        hx-swap="outerHTML"
+                        hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+                    <i class="bi bi-arrow-clockwise me-1"></i> Regénérer
+                </button>
             </div>
             <div class="card-body">
                 {{ recording.ai_summary|linebreaks }}
@@ -20,14 +27,34 @@
                 <br>{{ recording.ai_summary_failure_data.error }}
             {% endif %}
         </div>
+        {% if ai_settings_enabled %}
+        <button class="btn btn-primary mt-2"
+                hx-post="{% url 'projects:project-bot-generate-ai-summary' project.object_id bot.object_id %}"
+                hx-target="#ai-summary-container"
+                hx-swap="outerHTML"
+                hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+            <i class="bi bi-arrow-clockwise me-1"></i> Réessayer
+        </button>
+        {% endif %}
     {% elif not ai_settings_enabled %}
         <div class="alert alert-info">
             La synthèse IA n'est pas activée pour ce projet.
             <a href="{% url 'projects:project-ai-summary-settings' project.object_id %}">Configurer</a>
         </div>
-    {% else %}
+    {% elif recording and has_transcription %}
         <div class="alert alert-secondary">
             Aucune synthèse disponible pour cet enregistrement.
+        </div>
+        <button class="btn btn-primary"
+                hx-post="{% url 'projects:project-bot-generate-ai-summary' project.object_id bot.object_id %}"
+                hx-target="#ai-summary-container"
+                hx-swap="outerHTML"
+                hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+            <i class="bi bi-stars me-1"></i> Générer la synthèse
+        </button>
+    {% else %}
+        <div class="alert alert-secondary">
+            Aucune transcription disponible pour générer une synthèse.
         </div>
     {% endif %}
 </div>

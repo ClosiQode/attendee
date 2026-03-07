@@ -1681,7 +1681,7 @@ class ProjectBotAISummaryView(LoginRequiredMixin, ProjectUrlContextMixin, View):
     def get(self, request, object_id, bot_object_id):
         project = get_project_for_user(user=request.user, project_object_id=object_id)
         try:
-            bot = Bot.objects.select_related().prefetch_related("recordings").get(
+            bot = Bot.objects.select_related().prefetch_related("recordings__utterances").get(
                 object_id=bot_object_id, project=project
             )
         except Bot.DoesNotExist:
@@ -1694,10 +1694,53 @@ class ProjectBotAISummaryView(LoginRequiredMixin, ProjectUrlContextMixin, View):
         except AISummarySettings.DoesNotExist:
             pass
 
+        has_transcription = False
+        if recording:
+            has_transcription = recording.utterances.filter(transcription__isnull=False).exists()
+
         context = {
             "bot": bot,
             "recording": recording,
             "ai_settings_enabled": ai_settings_enabled,
+            "has_transcription": has_transcription,
+            "project": project,
+        }
+        return render(request, "projects/partials/project_bot_ai_summary.html", context)
+
+
+class ProjectBotGenerateAISummaryView(LoginRequiredMixin, ProjectUrlContextMixin, View):
+    def post(self, request, object_id, bot_object_id):
+        project = get_project_for_user(user=request.user, project_object_id=object_id)
+        try:
+            bot = Bot.objects.select_related().prefetch_related("recordings__utterances").get(
+                object_id=bot_object_id, project=project
+            )
+        except Bot.DoesNotExist:
+            return redirect("bots:project-bots", object_id=object_id)
+
+        recording = bot.recordings.filter(is_default_recording=True).first()
+        if recording:
+            from bots.tasks.generate_ai_summary_task import generate_ai_summary_task
+
+            generate_ai_summary_task.delay(recording.id)
+            recording.ai_summary_status = Recording.AISummaryStatus.IN_PROGRESS
+            recording.save(update_fields=["ai_summary_status"])
+
+        ai_settings_enabled = False
+        try:
+            ai_settings_enabled = project.ai_summary_settings.enabled
+        except AISummarySettings.DoesNotExist:
+            pass
+
+        has_transcription = False
+        if recording:
+            has_transcription = recording.utterances.filter(transcription__isnull=False).exists()
+
+        context = {
+            "bot": bot,
+            "recording": recording,
+            "ai_settings_enabled": ai_settings_enabled,
+            "has_transcription": has_transcription,
             "project": project,
         }
         return render(request, "projects/partials/project_bot_ai_summary.html", context)

@@ -618,6 +618,22 @@ class BotController:
             self.wait_until_all_utterances_are_terminated()
             BotEventManager.create_event(bot=self.bot_in_db, event_type=BotEventTypes.POST_PROCESSING_COMPLETED)
 
+            # Trigger AI summary generation if enabled
+            try:
+                from bots.models import AISummarySettings
+
+                ai_settings = self.bot_in_db.project.ai_summary_settings
+                if ai_settings.enabled:
+                    default_recording = self.bot_in_db.recordings.filter(is_default_recording=True).first()
+                    if default_recording:
+                        from bots.tasks.generate_ai_summary_task import generate_ai_summary_task
+
+                        generate_ai_summary_task.delay(default_recording.id)
+            except AISummarySettings.DoesNotExist:
+                pass
+            except Exception as e:
+                logger.error(f"Error triggering AI summary: {e}")
+
         normal_quitting_process_worked = True
 
     # We're going to wait until all utterances are transcribed or have failed. If there are still
