@@ -15,15 +15,73 @@
                 <div class="ai-summary-raw" style="display:none;">{{ recording.ai_summary }}</div>
             </div>
         </div>
+        <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+        <style>
+            #ai-summary-body h1 { font-size: 1.4rem; margin-top: 1.5rem; margin-bottom: 0.75rem; padding-bottom: 0.3rem; border-bottom: 2px solid #dee2e6; }
+            #ai-summary-body h2 { font-size: 1.15rem; margin-top: 1.2rem; margin-bottom: 0.5rem; }
+            #ai-summary-body h3 { font-size: 1rem; margin-top: 1rem; margin-bottom: 0.4rem; }
+            #ai-summary-body p { margin-bottom: 0.4rem; }
+            #ai-summary-body ul { margin-bottom: 0.5rem; }
+            #ai-summary-body li { margin-bottom: 0.15rem; }
+            #ai-summary-body hr { margin: 1rem 0; }
+            .email-copy-block { position: relative; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 0.375rem; padding: 1rem; margin-top: 0.5rem; }
+            .email-copy-block pre { white-space: pre-wrap; word-wrap: break-word; margin: 0; font-size: 0.85rem; }
+            .btn-copy-email { position: absolute; top: 0.5rem; right: 0.5rem; }
+        </style>
         <script>
         (function() {
             const raw = document.querySelector('#ai-summary-body .ai-summary-raw').textContent.trim();
             const body = document.getElementById('ai-summary-body');
+
+            // Try JSON first, then Markdown
             try {
                 const data = JSON.parse(raw);
                 body.innerHTML = renderJson(data);
             } catch(e) {
-                body.innerHTML = raw.replace(/\n/g, '<br>');
+                renderMarkdown(raw);
+            }
+
+            function renderMarkdown(text) {
+                // Split email section from the rest
+                const emailMarker = /^#\s*Email\s+de\s+suivi/im;
+                const match = text.match(emailMarker);
+
+                if (match) {
+                    const splitIndex = text.indexOf(match[0]);
+                    const analysisPart = text.substring(0, splitIndex);
+                    const emailPart = text.substring(splitIndex);
+
+                    // Extract the HTML email content from the markdown
+                    const htmlMatch = emailPart.match(/<p>[\s\S]*$/m);
+                    let emailTitle = emailPart;
+                    let emailHtml = '';
+
+                    if (htmlMatch) {
+                        emailTitle = emailPart.substring(0, emailPart.indexOf(htmlMatch[0]));
+                        emailHtml = htmlMatch[0].trim();
+                    }
+
+                    // Render analysis as markdown
+                    let html = marked.parse(analysisPart);
+
+                    // Render email title as markdown
+                    html += marked.parse(emailTitle);
+
+                    // Add email preview + copyable block
+                    if (emailHtml) {
+                        html += '<div class="card mt-2 mb-3">';
+                        html += '<div class="card-header d-flex justify-content-between align-items-center"><span>Aperçu de l\'email</span></div>';
+                        html += '<div class="card-body border-bottom">' + emailHtml + '</div>';
+                        html += '<div class="card-header d-flex justify-content-between align-items-center"><span>Code HTML de l\'email</span>';
+                        html += '<button class="btn btn-sm btn-outline-primary btn-copy-email" onclick="copyEmail(this)"><i class="bi bi-clipboard me-1"></i>Copier</button></div>';
+                        html += '<div class="email-copy-block"><pre><code>' + escapeHtml(emailHtml) + '</code></pre></div>';
+                        html += '</div>';
+                    }
+
+                    body.innerHTML = html;
+                } else {
+                    body.innerHTML = marked.parse(text);
+                }
             }
 
             function renderJson(obj) {
@@ -31,9 +89,7 @@
                 if (Array.isArray(obj)) {
                     if (obj.length === 0) return '<em class="text-muted">Aucun</em>';
                     return '<ul class="mb-2">' + obj.map(item => {
-                        if (typeof item === 'object' && item !== null) {
-                            return '<li>' + renderJson(item) + '</li>';
-                        }
+                        if (typeof item === 'object' && item !== null) return '<li>' + renderJson(item) + '</li>';
                         return '<li>' + escapeHtml(String(item)) + '</li>';
                     }).join('') + '</ul>';
                 }
@@ -42,8 +98,12 @@
                     for (const [key, value] of Object.entries(obj)) {
                         const label = formatKey(key);
                         if (typeof value === 'string' && value.trim().startsWith('<')) {
-                            // HTML content (like email body)
-                            html += '<div class="mb-3"><h6 class="text-primary border-bottom pb-1">' + escapeHtml(label) + '</h6><div class="ps-2">' + value + '</div></div>';
+                            html += '<div class="mb-3"><h6 class="text-primary border-bottom pb-1">' + escapeHtml(label) + '</h6>';
+                            html += '<div class="card mt-2 mb-3"><div class="card-header d-flex justify-content-between align-items-center"><span>Aperçu</span></div>';
+                            html += '<div class="card-body border-bottom">' + value + '</div>';
+                            html += '<div class="card-header d-flex justify-content-between align-items-center"><span>Code HTML</span>';
+                            html += '<button class="btn btn-sm btn-outline-primary" onclick="copyEmail(this)"><i class="bi bi-clipboard me-1"></i>Copier</button></div>';
+                            html += '<div class="email-copy-block"><pre><code>' + escapeHtml(value) + '</code></pre></div></div></div>';
                         } else {
                             html += '<div class="mb-3"><h6 class="text-primary border-bottom pb-1">' + escapeHtml(label) + '</h6><div class="ps-2">' + renderJson(value) + '</div></div>';
                         }
@@ -63,6 +123,20 @@
                 return div.innerHTML;
             }
         })();
+
+        function copyEmail(btn) {
+            const codeBlock = btn.closest('.card').querySelector('.email-copy-block code');
+            const text = codeBlock.textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = '<i class="bi bi-check me-1"></i>Copié !';
+                btn.classList.replace('btn-outline-primary', 'btn-success');
+                setTimeout(() => {
+                    btn.innerHTML = originalHtml;
+                    btn.classList.replace('btn-success', 'btn-outline-primary');
+                }, 2000);
+            });
+        }
         </script>
     {% elif recording and recording.ai_summary_status == 1 %}
         <div class="text-center p-4"
