@@ -11,12 +11,65 @@
                     <i class="bi bi-arrow-clockwise me-1"></i> Regénérer
                 </button>
             </div>
-            <div class="card-body">
-                {{ recording.ai_summary|linebreaks }}
+            <div class="card-body" id="ai-summary-body">
+                <div class="ai-summary-raw" style="display:none;">{{ recording.ai_summary }}</div>
             </div>
         </div>
+        <script>
+        (function() {
+            const raw = document.querySelector('#ai-summary-body .ai-summary-raw').textContent.trim();
+            const body = document.getElementById('ai-summary-body');
+            try {
+                const data = JSON.parse(raw);
+                body.innerHTML = renderJson(data);
+            } catch(e) {
+                body.innerHTML = raw.replace(/\n/g, '<br>');
+            }
+
+            function renderJson(obj) {
+                if (typeof obj === 'string') return escapeHtml(obj);
+                if (Array.isArray(obj)) {
+                    if (obj.length === 0) return '<em class="text-muted">Aucun</em>';
+                    return '<ul class="mb-2">' + obj.map(item => {
+                        if (typeof item === 'object' && item !== null) {
+                            return '<li>' + renderJson(item) + '</li>';
+                        }
+                        return '<li>' + escapeHtml(String(item)) + '</li>';
+                    }).join('') + '</ul>';
+                }
+                if (typeof obj === 'object' && obj !== null) {
+                    let html = '';
+                    for (const [key, value] of Object.entries(obj)) {
+                        const label = formatKey(key);
+                        if (typeof value === 'string' && value.trim().startsWith('<')) {
+                            // HTML content (like email body)
+                            html += '<div class="mb-3"><h6 class="text-primary border-bottom pb-1">' + escapeHtml(label) + '</h6><div class="ps-2">' + value + '</div></div>';
+                        } else {
+                            html += '<div class="mb-3"><h6 class="text-primary border-bottom pb-1">' + escapeHtml(label) + '</h6><div class="ps-2">' + renderJson(value) + '</div></div>';
+                        }
+                    }
+                    return html;
+                }
+                return escapeHtml(String(obj));
+            }
+
+            function formatKey(key) {
+                return key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+            }
+
+            function escapeHtml(str) {
+                const div = document.createElement('div');
+                div.textContent = str;
+                return div.innerHTML;
+            }
+        })();
+        </script>
     {% elif recording and recording.ai_summary_status == 1 %}
-        <div class="text-center p-4">
+        <div class="text-center p-4"
+             hx-get="{% url 'projects:project-bot-ai-summary' project.object_id bot.object_id %}"
+             hx-trigger="every 3s"
+             hx-target="#ai-summary-container"
+             hx-swap="outerHTML">
             <div class="spinner-border spinner-border-sm" role="status"></div>
             <span class="ms-2">Synthèse en cours de génération...</span>
         </div>
