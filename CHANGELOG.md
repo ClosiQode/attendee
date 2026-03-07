@@ -6,6 +6,13 @@ Format base sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
 ## [Non publie]
 
 ### Ajoute
+- Fonctionnalité Synthèse IA : génération automatique de résumés de réunions après transcription
+- Support multi-providers : OpenAI (GPT-5.2), Anthropic (Claude Sonnet), Mistral
+- Modèle AISummarySettings pour configurer la synthèse par projet
+- Tâche Celery generate_ai_summary_task pour la génération asynchrone
+- Page paramètres "Synthèse IA" dans l'espace utilisateur
+- Onglet "Synthèse IA" dans la page détail du bot
+- Nouveaux types de credentials : Anthropic, Mistral
 - Support du stockage local filesystem via `STORAGE_PROTOCOL=local` comme alternative a S3 et Azure
 - Nouveau `LocalFileUploader` pour copier les enregistrements vers le filesystem local
 - Volumes Docker pour le stockage local des recordings et audio chunks

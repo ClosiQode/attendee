@@ -1,0 +1,33 @@
+<div class="p-3">
+    {% if recording and recording.ai_summary_status == 2 %}
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Synthèse IA</h6>
+            </div>
+            <div class="card-body">
+                {{ recording.ai_summary|linebreaks }}
+            </div>
+        </div>
+    {% elif recording and recording.ai_summary_status == 1 %}
+        <div class="text-center p-4">
+            <div class="spinner-border spinner-border-sm" role="status"></div>
+            <span class="ms-2">Synthèse en cours de génération...</span>
+        </div>
+    {% elif recording and recording.ai_summary_status == 3 %}
+        <div class="alert alert-danger">
+            <strong>Erreur</strong> : La génération de la synthèse a échoué.
+            {% if recording.ai_summary_failure_data %}
+                <br>{{ recording.ai_summary_failure_data.error }}
+            {% endif %}
+        </div>
+    {% elif not ai_settings_enabled %}
+        <div class="alert alert-info">
+            La synthèse IA n'est pas activée pour ce projet.
+            <a href="{% url 'projects:project-ai-summary-settings' project.object_id %}">Configurer</a>
+        </div>
+    {% else %}
+        <div class="alert alert-secondary">
+            Aucune synthèse disponible pour cet enregistrement.
+        </div>
+    {% endif %}
+</div>

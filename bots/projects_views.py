@@ -21,6 +21,7 @@ from accounts.models import User, UserRole
 from .bots_api_utils import BotCreationSource, create_bot, create_webhook_subscription
 from .launch_bot_utils import launch_bot
 from .models import (
+    AISummarySettings,
     ApiKey,
     Bot,
     BotEvent,
@@ -149,6 +150,10 @@ def get_partial_for_credential_type(credential_type, request, context):
         return render(request, "projects/partials/kyutai_credentials.html", context)
     elif credential_type == Credentials.CredentialTypes.EXTERNAL_MEDIA_STORAGE:
         return render(request, "projects/partials/external_media_storage_credentials.html", context)
+    elif credential_type == Credentials.CredentialTypes.ANTHROPIC:
+        return render(request, "projects/partials/anthropic_credentials.html", context)
+    elif credential_type == Credentials.CredentialTypes.MISTRAL:
+        return render(request, "projects/partials/mistral_credentials.html", context)
     else:
         return HttpResponse("Cannot render the partial for this credential type", status=400)
 
@@ -442,6 +447,10 @@ class ProjectCredentialsView(LoginRequiredMixin, ProjectUrlContextMixin, View):
 
         external_media_storage_credentials = Credentials.objects.filter(project=project, credential_type=Credentials.CredentialTypes.EXTERNAL_MEDIA_STORAGE).first()
 
+        anthropic_credentials = Credentials.objects.filter(project=project, credential_type=Credentials.CredentialTypes.ANTHROPIC).first()
+
+        mistral_credentials = Credentials.objects.filter(project=project, credential_type=Credentials.CredentialTypes.MISTRAL).first()
+
         context = self.get_project_context(object_id, project)
         context.update(
             {
@@ -469,6 +478,10 @@ class ProjectCredentialsView(LoginRequiredMixin, ProjectUrlContextMixin, View):
                 "teams_bot_login_credential_type": Credentials.CredentialTypes.TEAMS_BOT_LOGIN,
                 "external_media_storage_credentials": external_media_storage_credentials.get_credentials() if external_media_storage_credentials else None,
                 "external_media_storage_credential_type": Credentials.CredentialTypes.EXTERNAL_MEDIA_STORAGE,
+                "anthropic_credentials": anthropic_credentials.get_credentials() if anthropic_credentials else None,
+                "anthropic_credential_type": Credentials.CredentialTypes.ANTHROPIC,
+                "mistral_credentials": mistral_credentials.get_credentials() if mistral_credentials else None,
+                "mistral_credential_type": Credentials.CredentialTypes.MISTRAL,
             }
         )
 
@@ -1633,3 +1646,58 @@ class DeleteGoogleMeetBotLoginView(LoginRequiredMixin, ProjectUrlContextMixin, V
         context = self.get_project_context(object_id, project)
         context["google_meet_bot_login_group"] = google_meet_bot_login_group
         return render(request, "projects/partials/google_meet_bot_login_group.html", context)
+
+
+class AISummarySettingsView(LoginRequiredMixin, ProjectUrlContextMixin, View):
+    def get(self, request, object_id):
+        project = get_project_for_user(user=request.user, project_object_id=object_id)
+        ai_settings, created = AISummarySettings.objects.get_or_create(project=project)
+        context = self.get_project_context(object_id, project)
+        context.update({
+            "ai_settings": ai_settings,
+            "providers": AISummarySettings.AISummaryProviders.choices,
+        })
+        return render(request, "projects/project_ai_summary_settings.html", context)
+
+    def post(self, request, object_id):
+        project = get_project_for_user(user=request.user, project_object_id=object_id)
+        ai_settings, created = AISummarySettings.objects.get_or_create(project=project)
+        ai_settings.enabled = request.POST.get("enabled") == "on"
+        ai_settings.provider = int(request.POST.get("provider", 1))
+        ai_settings.system_prompt = request.POST.get("system_prompt", ai_settings.system_prompt)
+        ai_settings.model_name = request.POST.get("model_name", "")
+        ai_settings.reasoning_effort = request.POST.get("reasoning_effort", "")
+        ai_settings.save()
+        context = self.get_project_context(object_id, project)
+        context.update({
+            "ai_settings": ai_settings,
+            "providers": AISummarySettings.AISummaryProviders.choices,
+            "success": True,
+        })
+        return render(request, "projects/project_ai_summary_settings.html", context)
+
+
+class ProjectBotAISummaryView(LoginRequiredMixin, ProjectUrlContextMixin, View):
+    def get(self, request, object_id, bot_object_id):
+        project = get_project_for_user(user=request.user, project_object_id=object_id)
+        try:
+            bot = Bot.objects.select_related().prefetch_related("recordings").get(
+                object_id=bot_object_id, project=project
+            )
+        except Bot.DoesNotExist:
+            return redirect("bots:project-bots", object_id=object_id)
+
+        recording = bot.recordings.filter(is_default_recording=True).first()
+        ai_settings_enabled = False
+        try:
+            ai_settings_enabled = project.ai_summary_settings.enabled
+        except AISummarySettings.DoesNotExist:
+            pass
+
+        context = {
+            "bot": bot,
+            "recording": recording,
+            "ai_settings_enabled": ai_settings_enabled,
+            "project": project,
+        }
+        return render(request, "projects/partials/project_bot_ai_summary.html", context)

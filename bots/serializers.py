@@ -1741,10 +1741,12 @@ class TranscriptUtteranceSerializer(serializers.Serializer):
 )
 class RecordingSerializer(serializers.ModelSerializer):
     start_timestamp_ms = serializers.IntegerField(source="first_buffer_timestamp_ms")
+    ai_summary = serializers.CharField(read_only=True)
+    ai_summary_status = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Recording
-        fields = ["url", "start_timestamp_ms"]
+        fields = ["url", "start_timestamp_ms", "ai_summary", "ai_summary_status"]
 
 
 @extend_schema_field(

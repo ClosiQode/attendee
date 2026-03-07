@@ -2059,6 +2059,12 @@ class RecordingStorage(Storage):
 
 
 class Recording(models.Model):
+    class AISummaryStatus(models.IntegerChoices):
+        NOT_STARTED = 0, "Not Started"
+        IN_PROGRESS = 1, "In Progress"
+        COMPLETE = 2, "Complete"
+        FAILED = 3, "Failed"
+
     bot = models.ForeignKey(Bot, on_delete=models.CASCADE, related_name="recordings")
 
     recording_type = models.IntegerField(choices=RecordingTypes.choices, null=False)
@@ -2078,6 +2084,13 @@ class Recording(models.Model):
     transcription_failure_data = models.JSONField(null=True, default=None)
 
     transcription_provider = models.IntegerField(choices=TranscriptionProviders.choices, null=True, blank=True)
+
+    ai_summary = models.TextField(null=True, blank=True)
+    ai_summary_status = models.IntegerField(
+        choices=AISummaryStatus.choices,
+        default=AISummaryStatus.NOT_STARTED,
+    )
+    ai_summary_failure_data = models.JSONField(null=True, blank=True)
 
     version = IntegerVersionField()
     created_at = models.DateTimeField(auto_now_add=True)
@@ -2242,6 +2255,15 @@ class RecordingManager:
         recording.transcription_state = RecordingTranscriptionStates.COMPLETE
         recording.save()
 
+        # Trigger AI summary generation if enabled
+        try:
+            ai_settings = recording.bot.project.ai_summary_settings
+            if ai_settings.enabled:
+                from bots.tasks.generate_ai_summary_task import generate_ai_summary_task
+                generate_ai_summary_task.delay(recording.id)
+        except AISummarySettings.DoesNotExist:
+            pass
+
     @classmethod
     def set_recording_transcription_failed(cls, recording: Recording, failure_data: dict):
         recording.refresh_from_db()
@@ -2364,6 +2386,16 @@ class AsyncTranscriptionManager:
         async_transcription.save()
 
         cls.delivery_webhook(async_transcription)
+
+        # Trigger AI summary generation if enabled
+        try:
+            recording = async_transcription.recording
+            ai_settings = recording.bot.project.ai_summary_settings
+            if ai_settings.enabled:
+                from bots.tasks.generate_ai_summary_task import generate_ai_summary_task
+                generate_ai_summary_task.delay(recording.id)
+        except AISummarySettings.DoesNotExist:
+            pass
 
     @classmethod
     def delivery_webhook(cls, async_transcription: AsyncTranscription):
@@ -2520,6 +2552,8 @@ class Credentials(models.Model):
         EXTERNAL_MEDIA_STORAGE = 9, "External Media Storage"
         ELEVENLABS = 10, "ElevenLabs"
         KYUTAI = 11, "Kyutai"
+        ANTHROPIC = 12, "Anthropic"
+        MISTRAL = 13, "Mistral"
 
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="credentials")
     credential_type = models.IntegerField(choices=CredentialTypes.choices, null=False)
@@ -2552,6 +2586,32 @@ class Credentials(models.Model):
 
     def __str__(self):
         return f"{self.project.name} - {self.get_credential_type_display()}"
+
+
+class AISummarySettings(models.Model):
+    class AISummaryProviders(models.IntegerChoices):
+        OPENAI = 1, "OpenAI"
+        ANTHROPIC = 2, "Anthropic"
+        MISTRAL = 3, "Mistral"
+
+    project = models.OneToOneField(Project, on_delete=models.CASCADE, related_name="ai_summary_settings")
+    enabled = models.BooleanField(default=False)
+    provider = models.IntegerField(choices=AISummaryProviders.choices, default=AISummaryProviders.OPENAI)
+    system_prompt = models.TextField(
+        default="Tu es un assistant spécialisé dans la synthèse de réunions professionnelles. "
+                "À partir de la transcription fournie, génère une synthèse structurée comprenant :\n\n"
+                "## Résumé\nUn résumé concis de la réunion en 2-3 phrases.\n\n"
+                "## Points clés\nLes points importants abordés durant la réunion.\n\n"
+                "## Décisions prises\nLes décisions qui ont été prises.\n\n"
+                "## Actions à faire\nLes actions à entreprendre, avec les responsables si mentionnés."
+    )
+    model_name = models.CharField(max_length=100, default="", blank=True)
+    reasoning_effort = models.CharField(max_length=10, default="low", blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.project.name} - AI Summary ({'enabled' if self.enabled else 'disabled'})"
 
 
 class MediaBlob(models.Model):

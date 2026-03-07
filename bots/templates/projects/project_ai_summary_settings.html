@@ -1,0 +1,103 @@
+{% extends 'projects/sidebar.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Synthèse IA</h2>
+
+    {% if success %}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-2"></i> Paramètres sauvegardés avec succès.
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="mb-0">Configuration de la synthèse IA</h5>
+        </div>
+        <div class="card-body">
+            <form method="post" hx-post="{% url 'projects:project-ai-summary-settings' project.object_id %}"
+                  hx-select="#content" hx-target="#content" hx-swap="outerHTML">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" name="enabled" id="aiSummaryEnabled"
+                               {% if ai_settings.enabled %}checked{% endif %}>
+                        <label class="form-check-label" for="aiSummaryEnabled">
+                            Activer la synthèse IA
+                        </label>
+                    </div>
+                    <small class="text-muted d-block mt-2">
+                        Activez cette option pour générer automatiquement des synthèses IA pour les enregistrements.
+                    </small>
+                </div>
+
+                <hr>
+
+                <div class="mb-3">
+                    <label for="provider" class="form-label">Fournisseur</label>
+                    <select class="form-select" name="provider" id="provider">
+                        {% for value, label in providers %}
+                            <option value="{{ value }}" {% if ai_settings.provider == value %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <small class="text-muted d-block mt-2">
+                        Choisissez le fournisseur d'IA pour générer les synthèses.
+                    </small>
+                </div>
+
+                <div class="mb-3">
+                    <label for="modelName" class="form-label">Nom du modèle</label>
+                    <input type="text" class="form-control" name="model_name" id="modelName"
+                           value="{{ ai_settings.model_name }}"
+                           placeholder="ex: gpt-4, claude-3-opus, mistral-large">
+                    <small class="text-muted d-block mt-2">
+                        Spécifiez le modèle IA à utiliser. Laissez vide pour utiliser le modèle par défaut du fournisseur.
+                    </small>
+                </div>
+
+                <div class="mb-3">
+                    <label for="reasoningEffort" class="form-label">Effort de raisonnement <span class="badge bg-secondary">Uniquement pour GPT-5.x</span></label>
+                    <select class="form-select" name="reasoning_effort" id="reasoningEffort">
+                        <option value="" {% if ai_settings.reasoning_effort == "" %}selected{% endif %}>
+                            Non spécifié / Désactivé
+                        </option>
+                        <option value="none" {% if ai_settings.reasoning_effort == "none" %}selected{% endif %}>
+                            Aucun raisonnement (le plus rapide)
+                        </option>
+                        <option value="low" {% if ai_settings.reasoning_effort == "low" %}selected{% endif %}>
+                            Faible
+                        </option>
+                        <option value="medium" {% if ai_settings.reasoning_effort == "medium" %}selected{% endif %}>
+                            Moyen (défaut pour GPT-5.x)
+                        </option>
+                        <option value="high" {% if ai_settings.reasoning_effort == "high" %}selected{% endif %}>
+                            Élevé
+                        </option>
+                    </select>
+                    <small class="text-muted d-block mt-2">
+                        Seulement applicable aux modèles GPT-5.x d'OpenAI. Laissez vide pour les autres fournisseurs (Anthropic, Mistral).
+                    </small>
+                </div>
+
+                <div class="mb-3">
+                    <label for="systemPrompt" class="form-label">Prompt système</label>
+                    <textarea class="form-control" name="system_prompt" id="systemPrompt" rows="8">{{ ai_settings.system_prompt }}</textarea>
+                    <small class="text-muted d-block mt-2">
+                        Définissez les instructions pour générer les synthèses IA.
+                    </small>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg me-2"></i> Sauvegarder
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -81,14 +81,23 @@
                             </span>
                         </a>
                         <div class="settings-submenu" style="display: none;">
-                            <a class="nav-link ps-4" 
-                               hx-get="{% url 'projects:project-credentials' project.object_id %}" 
+                            <a class="nav-link ps-4"
+                               hx-get="{% url 'projects:project-credentials' project.object_id %}"
                                hx-select="#content"
                                hx-target="#content"
                                hx-swap="outerHTML"
                                hx-push-url="true"
                                onclick="setActiveLink(this)">
                                 <i class="bi bi-lock"></i> Identifiants
+                            </a>
+                            <a class="nav-link ps-4"
+                               hx-get="{% url 'projects:project-ai-summary-settings' project.object_id %}"
+                               hx-select="#content"
+                               hx-target="#content"
+                               hx-swap="outerHTML"
+                               hx-push-url="true"
+                               onclick="setActiveLink(this)">
+                                <i class="bi bi-stars"></i> Synthèse IA
                             </a>
                             {% if project.organization.is_webhooks_enabled %}
                             <a class="nav-link ps-4"
@@ -102,8 +111,8 @@
                             </a>
                             {% endif %}
                             {% if user.role == UserRole.ADMIN %}
-                                <a class="nav-link ps-4" 
-                                hx-get="{% url 'projects:project-project' project.object_id %}" 
+                                <a class="nav-link ps-4"
+                                hx-get="{% url 'projects:project-project' project.object_id %}"
                                 hx-select="#content"
                                 hx-target="#content"
                                 hx-swap="outerHTML"

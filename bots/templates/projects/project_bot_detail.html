@@ -246,6 +246,12 @@
                 Messages
             </button>
         </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="ai-summary-tab" data-bs-toggle="tab"
+                    data-bs-target="#ai-summary" type="button" role="tab">
+                Synthèse IA
+            </button>
+        </li>
         {% if participants %}
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="participants-tab" data-bs-toggle="tab" 
@@ -368,6 +374,19 @@
             {% else %}
                 <div class="alert alert-info">Aucun message enregistre.</div>
             {% endif %}
+        </div>
+
+        <!-- AI Summary Tab -->
+        <div class="tab-pane fade" id="ai-summary" role="tabpanel">
+            <div id="ai-summary-content"
+                 hx-get="{% url 'bots:project-bot-ai-summary' project.object_id bot.object_id %}"
+                 hx-trigger="intersect once"
+                 hx-swap="innerHTML">
+                <div class="text-center p-4">
+                    <div class="spinner-border spinner-border-sm" role="status"></div>
+                    <span class="ms-2">Chargement...</span>
+                </div>
+            </div>
         </div>
 
         <!-- Webhooks Tab -->
