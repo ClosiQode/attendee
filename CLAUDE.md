@@ -14,14 +14,17 @@ Ceci est **OBLIGATOIRE**. Ne negligez cette etape sous aucun pretexte. La lectur
 
 **Types de fichiers a lire absolument :**
 
-1. **Fichiers similaires** : Lisez les fichiers aux fonctionnalites similaires pour comprendre les modeles et les conventions.
-2. **Dependances importees** : Lisez la definition/l'implementation des importations dont vous n'etes pas certain de l'utilisation ; comprenez leur API, leurs types et leurs cas d'utilisation.
+1. **ARCHITECTURE.md** : Consultez la table des relations et les fichiers critiques pour comprendre l'impact de votre modification. Identifiez les dependants et les dependances. Si votre modification touche un fichier critique, verifiez que les systemes dependants ne seront pas casses.
+2. **Fichiers similaires** : Lisez les fichiers aux fonctionnalites similaires pour comprendre les modeles et les conventions.
+3. **Dependances importees** : Lisez la definition/l'implementation des importations dont vous n'etes pas certain de l'utilisation ; comprenez leur API, leurs types et leurs cas d'utilisation.
 
 **Etapes a suivre :**
 
-1. Lisez au moins 3 fichiers existants pertinents (fonctionnalites similaires + dependances importees)
-2. Comprenez les modeles, les conventions et l'utilisation de l'API
-3. Procedez ensuite a la creation/modification des fichiers
+1. Consultez ARCHITECTURE.md pour identifier les impacts potentiels de votre modification
+2. Lisez au moins 3 fichiers existants pertinents (fichiers dependants + dependances importees)
+3. Comprenez les modeles, les conventions et l'utilisation de l'API
+4. Procedez ensuite a la creation/modification des fichiers
+5. Si la modification est structurelle, mettez a jour ARCHITECTURE.md
 
 ## CHANGELOG - OBLIGATOIRE
 
@@ -30,6 +33,14 @@ Ceci est **OBLIGATOIRE**. Ne negligez cette etape sous aucun pretexte. La lectur
 - Si le fichier `CHANGELOG.md` n'existe pas, **creez-le immediatement**
 - Documentez chaque modification avec : date, description, fichiers impactes
 - Utilisez le format [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
+
+## ARCHITECTURE - OBLIGATOIRE
+
+**A chaque modification structurelle du projet, vous DEVEZ mettre a jour le fichier ARCHITECTURE.md.**
+
+- Si le fichier `ARCHITECTURE.md` n'existe pas, **creez-le** en analysant le projet complet
+- Mettez a jour lors de : ajout/suppression de fonctionnalite, modification de schema BDD, changement de dependances entre systemes, ajout de fichier critique
+- Ne PAS mettre a jour pour : corrections de bugs, changements CSS, modifications de texte
 
 ## WORKFLOW OBLIGATOIRE - SWARM / EQUIPES D'AGENTS PARALLELES
 
@@ -90,16 +101,19 @@ Les equipes d'agents (swarm) :
 - **Python** : 3.10
 - **Base de donnees** : PostgreSQL 15 (via psycopg2)
 - **Cache / Message broker** : Redis 7
-- **Taches asynchrones** : Celery 5.4
-- **Stockage** : django-storages (S3 via boto3 + Azure Blob Storage)
-- **Authentification** : django-allauth (email, Google OAuth)
+- **Taches asynchrones** : Celery 5.4 (scheduler custom, pas Celery Beat)
+- **Stockage** : django-storages (S3 via boto3 + Azure Blob Storage + Local filesystem)
+- **Authentification** : django-allauth (email, Google OAuth) + SAML SSO (pysaml2)
 - **API docs** : drf-spectacular (OpenAPI / Swagger / Redoc)
 - **Linter/Formatter** : Ruff (pre-commit hooks)
 - **Navigateur automatise** : Selenium + Chrome/ChromeDriver 134
-- **Audio/Video** : GStreamer, PulseAudio, FFmpeg, OpenCV, PyVirtualDisplay
-- **Transcription** : Deepgram SDK
-- **Deploiement** : Docker (Ubuntu 22.04 amd64), Kubernetes (optionnel), Heroku (optionnel)
-- **Monitoring** : Sentry
+- **Audio/Video** : GStreamer, PulseAudio, FFmpeg, OpenCV, PyVirtualDisplay, aiortc (WebRTC)
+- **Transcription** : Deepgram, OpenAI, Gladia, AssemblyAI, Sarvam, ElevenLabs, Kyutai
+- **Synthese IA** : OpenAI (GPT-5.x), Anthropic (Claude), Mistral
+- **Paiements** : Stripe (checkout, autopay)
+- **Frontend** : Django templates + HTMX 2.0.3 + Bootstrap 5.3
+- **Deploiement** : Docker (Ubuntu 22.04 amd64), Kubernetes (optionnel)
+- **Monitoring** : Sentry (Django, Celery, Redis integrations)
 
 ## Commandes de developpement
 
@@ -158,8 +172,14 @@ bots/                        # App Django principale - Coeur du projet
   serializers.py             # Serializers DRF (~95K)
   bots_api_views.py          # Vues API REST pour les bots (~71K)
   bots_api_utils.py          # Utilitaires API bots
+  projects_views.py          # Vues Django dashboard (HTMX)
+  projects_urls.py           # Routes dashboard web
   bot_adapter.py             # Classe de base abstraite pour les adaptateurs de bot
+  ai_summary_providers.py    # Abstraction OpenAI/Anthropic/Mistral pour synthese IA
   storage.py                 # Abstraction stockage (StorageAlias, remote_storage_url)
+  authentication.py          # ApiKeyAuthentication (Token-based)
+  throttling.py              # Rate limiting API (ProjectPostThrottle)
+  webhook_utils.py           # Declenchement webhooks + payload construction
   automatic_leave_configuration.py  # Config auto-leave (timeouts)
   automatic_leave_utils.py   # Detection de bots par mots-cles
 
@@ -184,22 +204,52 @@ bots/                        # App Django principale - Coeur du projet
   teams_bot_adapter/         # Adaptateur Microsoft Teams
   webpage_streamer/          # Streaming de pages web dans les reunions
 
-  tasks/                     # Taches Celery asynchrones
-    run_bot_task.py           # Tache principale de lancement de bot
+  tasks/                     # Taches Celery asynchrones (un fichier par tache)
+    __init__.py               # IMPORTANT: toute nouvelle tache doit etre importee ici
+    run_bot_task.py           # Tache principale de lancement de bot (4h timeout)
     run_bot_in_ephemeral_container_task.py  # Lancement dans conteneur Docker ephemere
-    deliver_webhook_task.py   # Livraison des webhooks
-    process_async_transcription_task.py  # Transcription asynchrone
+    deliver_webhook_task.py   # Livraison des webhooks (3 retries, backoff)
+    process_utterance_task.py # Transcription temps reel (7 providers)
+    process_async_transcription_task.py  # Transcription asynchrone post-meeting
+    generate_ai_summary_task.py  # Generation synthese IA (OpenAI/Anthropic/Mistral)
+    sync_calendar_task.py     # Sync calendriers Google/Microsoft (24h)
+    launch_scheduled_bot_task.py  # Lancement bots planifies
+    autopay_charge_task.py    # Facturation Stripe automatique
+    send_slack_alert_task.py  # Alertes Slack sur erreurs fatales
+
+  templates/projects/        # Templates Django (HTMX)
+    sidebar.html              # Navigation principale
+    project_bot_detail.html   # Detail bot (7 onglets)
+    project_bots.html         # Liste bots + filtres
+    partials/                 # Fragments HTMX (recordings, AI summary, credentials)
+
+  templatetags/bot_filters.py  # Filtres custom (couleurs participants, dates)
+
+  management/commands/
+    run_scheduler.py          # Daemon scheduler (polling, PAS Celery Beat)
 
   tests/                     # Suite de tests (~47 fichiers)
-  migrations/                # Migrations Django (~80 fichiers)
+  migrations/                # Migrations Django (~80+ fichiers)
 ```
 
 ### Modeles principaux (bots/models.py)
 
 - **Project** : Projet contenant des bots, lie a une Organization
-- **Bot** : Entite principale - un bot qui rejoint une reunion
-- **BotEvent** : Evenements du cycle de vie du bot (joining, joined, left, etc.)
-- **Credentials** : Credentials chiffres (Zoom OAuth, Deepgram, etc.)
+- **Bot** : Entite principale - un bot qui rejoint une reunion (19 etats possibles)
+- **BotEvent** : Evenements du cycle de vie du bot (19 types, 28 sous-types)
+- **Recording** : Enregistrement media (S3/Azure/Local) avec etats et transcription
+- **Utterance** : Segment transcrit (audio → texte via providers)
+- **AudioChunk** : Chunk audio brut (PCM/MP3, par participant ou mixe)
+- **AsyncTranscription** : Transcription post-meeting (orchestre process_utterance tasks)
+- **Participant** : Participant de reunion (UUID, nom, evenements join/leave)
+- **Credentials** : Credentials chiffres Fernet (13 types: Deepgram, OpenAI, Anthropic, Mistral, etc.)
+- **AISummarySettings** : Config synthese IA par projet (provider, modele, prompt, reasoning_effort)
+- **Calendar** / **CalendarEvent** : Integration calendrier Google/Microsoft
+- **ZoomOAuthApp** / **ZoomOAuthConnection** : Gestion OAuth Zoom
+- **WebhookSubscription** / **WebhookDeliveryAttempt** : Systeme de webhooks (10 triggers)
+- **ApiKey** : Cles API hashees SHA-256
+- **CreditTransaction** : Historique facturation (centicredits)
+- **SharedRecordingLink** : Liens de partage public des enregistrements
 - **GoogleMeetBotLoginGroup** : Groupes de login pour bots Google Meet
 
 ### API REST
@@ -217,14 +267,32 @@ Interface admin Django disponible sur `/admin/` (desactivable via `DISABLE_ADMIN
 Le stockage est configure via `STORAGE_PROTOCOL` (env var) :
 - `"s3"` (defaut) : AWS S3 via boto3 + django-storages
 - `"azure"` : Azure Blob Storage
+- `"local"` : Systeme de fichiers local (/recordings)
 
-Configuration dans `attendee/settings/base.py` (lignes 241-295).
-Point d'extension principal : `bot_controller.py:get_file_uploader()` (ligne 521).
+Configuration dans `attendee/settings/base.py`.
+Point d'extension principal : `bot_controller.py:get_file_uploader()`.
 
 Les uploaders suivent une interface commune :
 - `upload_file(file_path, callback=None)`
 - `wait_for_upload()`
 - `delete_file(file_path)`
+
+### Systeme de synthese IA
+
+Configure via le modele `AISummarySettings` (OneToOne avec Project) :
+- **Providers** : OpenAI (1), Anthropic (2), Mistral (3)
+- **Declenchement** : automatique apres POST_PROCESSING_COMPLETED ou manuellement via UI
+- **Provider abstraction** : `ai_summary_providers.py` (reasoning_effort conditionnel pour GPT-5.x/o1/o3)
+- **Tache Celery** : `generate_ai_summary_task` (soft_time_limit=300s, max_retries=2)
+- **Credentials** : utilise le vault Credentials du projet (type correspondant au provider)
+- **Rendu** : Markdown (marked.js) ou JSON, avec bloc email HTML copiable
+
+### Systeme de webhooks
+
+- 10 types de triggers (bot_state, transcript, chat, participants, calendar, etc.)
+- Signature HMAC-SHA256 via WebhookSecret
+- Livraison via task Celery `deliver_webhook` (3 retries, exponential backoff)
+- Tracking: WebhookDeliveryAttempt avec idempotency_key
 
 ### Systeme d'auto-leave
 
@@ -262,7 +330,7 @@ Logique implementee dans `web_bot_adapter.py:check_auto_leave_conditions()` (lig
 
 - **Adaptateurs de bot** : Heritage hierarchique `BotAdapter` > `WebBotAdapter` > `GoogleMeetBotAdapter`/`TeamsBotAdapter`
 - **Uploaders de fichiers** : Interface commune (duck typing), instancies dans `get_file_uploader()`
-- **Taches Celery** : Un fichier par tache dans `bots/tasks/`, decorateur `@shared_task`
+- **Taches Celery** : Un fichier par tache dans `bots/tasks/`, decorateur `@shared_task`. **IMPORTANT** : toute nouvelle tache doit etre importee dans `bots/tasks/__init__.py` et ajoutee a `__all__` sinon Celery ne la decouvre pas
 - **Serializers** : Serializers DRF avec schemas OpenAPI personnalises
 - **Concurrence** : `IntegerVersionField` pour l'optimistic locking
 - **Chiffrement** : Fernet pour les credentials sensibles
@@ -278,33 +346,44 @@ Logique implementee dans `web_bot_adapter.py:check_auto_leave_conditions()` (lig
 ## Variables d'environnement importantes
 
 ```
+# Obligatoires
 DJANGO_SECRET_KEY              # Cle secrete Django
 CREDENTIALS_ENCRYPTION_KEY     # Cle Fernet pour chiffrer les credentials
 DJANGO_SETTINGS_MODULE         # Module settings (ex: attendee.settings.development)
+POSTGRES_HOST                  # Dev: hostname PostgreSQL
+DATABASE_URL                   # Prod: connexion complete via dj-database-url
+REDIS_URL                      # Connexion Redis (broker + cache)
 
-# Stockage S3
-STORAGE_PROTOCOL               # "s3" (defaut) ou "azure"
+# Stockage
+STORAGE_PROTOCOL               # "s3" (defaut), "azure" ou "local"
 AWS_RECORDING_STORAGE_BUCKET_NAME
 AWS_ACCESS_KEY_ID
 AWS_SECRET_ACCESS_KEY
 AWS_DEFAULT_REGION
 AWS_ENDPOINT_URL               # Pour MinIO ou S3-compatible
-
-# Stockage Azure
 AZURE_RECORDING_STORAGE_CONTAINER_NAME
 AZURE_STORAGE_CONNECTION_STRING
+LOCAL_RECORDING_STORAGE_PATH   # Defaut: /recordings (mode local)
 
-# Base de donnees
-POSTGRES_HOST
-DATABASE_URL                   # Alternative via dj-database-url
-
-# Redis
-REDIS_URL
+# Branding / Acces
+PLATFORM_NAME                  # Nom marque blanche (defaut: "Attendee")
+DISABLE_SIGNUP                 # Bloquer inscriptions publiques (true/false)
+DISABLE_ADMIN                  # Masquer /admin/
 
 # Bot execution
 BOT_MAX_EXECUTION_SECONDS      # Timeout conteneur (defaut: 14400 = 4h)
 BOT_CPU_QUOTA                  # CPU quota conteneur (defaut: 100000 = 1 core)
 CONCURRENT_BOTS_LIMIT          # Limite de bots simultanees (defaut: 2500)
+
+# Monitoring
+SENTRY_DSN                     # URL Sentry (optionnel)
+
+# Email
+EMAIL_HOST                     # Serveur SMTP (optionnel en dev)
+EMAIL_HOST_USER
+EMAIL_HOST_PASSWORD
+EMAIL_PORT                     # Port SMTP
+EMAIL_USE_SSL / EMAIL_USE_TLS
 ```
 
 ## Services Docker (dev)
@@ -329,14 +408,20 @@ CONCURRENT_BOTS_LIMIT          # Limite de bots simultanees (defaut: 2500)
 
 | Fichier | Description |
 |---------|-------------|
+| `ARCHITECTURE.md` | Cartographie complete : arbre, relations, fichiers critiques |
 | `bots/models.py` | Tous les modeles Django (~137K lignes) |
 | `bots/bot_controller/bot_controller.py` | Logique principale du bot (~100K) |
 | `bots/web_bot_adapter/web_bot_adapter.py` | Base des bots navigateur (Google Meet, Teams) |
 | `bots/google_meet_bot_adapter/` | Adaptateur specifique Google Meet |
 | `bots/storage.py` | Abstraction stockage |
+| `bots/ai_summary_providers.py` | Abstraction OpenAI/Anthropic/Mistral |
 | `bots/bot_controller/s3_file_uploader.py` | Upload S3 |
 | `bots/bot_controller/azure_file_uploader.py` | Upload Azure |
 | `bots/automatic_leave_configuration.py` | Configuration des timeouts auto-leave |
+| `bots/tasks/__init__.py` | **Critique** : imports Celery (toute tache doit y etre) |
+| `bots/projects_views.py` | Vues dashboard web (HTMX) |
+| `bots/webhook_utils.py` | Declenchement et construction webhooks |
 | `attendee/settings/base.py` | Settings Django principaux |
 | `bots/serializers.py` | Serializers API (~95K) |
 | `bots/bots_api_views.py` | Endpoints API des bots (~71K) |
+| `bots/management/commands/run_scheduler.py` | Daemon scheduler (polling) |
